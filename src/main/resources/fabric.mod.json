@@ -1,0 +1,44 @@
+{
+	"schemaVersion": 1,
+	"id": "modularmap",
+	"version": "${version}",
+	"name": "ModularMap",
+	"description": "This is a map mod that allows you to add custom functionality and server side support.",
+	"authors": [
+		"201st_Luka"
+	],
+	"contact": {
+		"homepage": "https://201st-legion.dev/",
+		"sources": "https://github.com/201st-Luka/ModularMap"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/modularmap/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"luka.modularmap.ModularMap"
+		],
+		"client": [
+			"luka.modularmap.ModularMapClient"
+		],
+		"modmenu": [
+			"luka.modularmap.compat.modmenu.ModMenuApiImpl"
+		]
+	},
+	"mixins": [
+		"modularmap.mixins.json",
+		{
+			"config": "modularmap.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.15.11",
+		"minecraft": "~1.21",
+		"java": ">=21",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}
