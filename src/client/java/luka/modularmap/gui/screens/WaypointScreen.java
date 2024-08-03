@@ -2,8 +2,6 @@ package luka.modularmap.gui.screens;
 
 import luka.modularmap.event.KeyInputHandler;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.TextWidget;
-import net.minecraft.text.Text;
 
 public class WaypointScreen extends MenuScreen {
     public WaypointScreen() {
