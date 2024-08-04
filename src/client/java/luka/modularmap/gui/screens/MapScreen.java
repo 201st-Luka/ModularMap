@@ -15,41 +15,34 @@ import net.minecraft.util.Identifier;
 
 @Environment(EnvType.CLIENT)
 public class MapScreen extends BaseScreen {
-    public static final int FRAME_SPACING = 5,
-            PADDING = 5,
-            ICON_SIZE = 16;
-
     public MapScreen() {
         super("Map Screen");
     }
-
-    ButtonWidget configButton,
-            waypointButton;
 
     @Override
     protected void init() {
         super.init();
 
-        configButton = new TexturedButtonWidget(
-                width - FRAME_SPACING - ICON_SIZE, height - FRAME_SPACING - ICON_SIZE,
-                ICON_SIZE, ICON_SIZE,
+        ButtonWidget configButton = new TexturedButtonWidget(
+                width - frameSpacing - buttonSize, height - frameSpacing - buttonSize,
+                buttonSize, buttonSize,
                 new ButtonTextures(
                     Identifier.of(ModularMapClient.MOD_ID, "map/buttons/config"),
-                    Identifier.of(ModularMapClient.MOD_ID, "map/buttons/config_focused")
+                    Identifier.of(ModularMapClient.MOD_ID, "map/buttons/config_highlighted")
                 ),
                 button -> client.setScreen(new ConfigScreen(this)),
                 Text.literal("Configuration")
-        );
-        waypointButton = new TexturedButtonWidget(
-                width - FRAME_SPACING - ICON_SIZE, height - FRAME_SPACING - ICON_SIZE * 2 - PADDING,
-                ICON_SIZE, ICON_SIZE,
-                new ButtonTextures(
-                        Identifier.of(ModularMapClient.MOD_ID, "map/buttons/waypoints"),
-                        Identifier.of(ModularMapClient.MOD_ID, "map/buttons/waypoints_focused")
-                ),
-                button -> client.setScreen(new WaypointScreen(this)),
-                Text.literal("Waypoints")
-        );
+        ),
+                waypointButton = new TexturedButtonWidget(
+                        width - frameSpacing - buttonSize, height - frameSpacing - buttonSize * 2 - padding,
+                        buttonSize, buttonSize,
+                        new ButtonTextures(
+                                Identifier.of(ModularMapClient.MOD_ID, "map/buttons/waypoints"),
+                                Identifier.of(ModularMapClient.MOD_ID, "map/buttons/waypoints_highlighted")
+                        ),
+                        button -> client.setScreen(new WaypointScreen(this)),
+                        Text.literal("Waypoints")
+                );
 
         addDrawableChild(configButton);
         addDrawableChild(waypointButton);
@@ -71,7 +64,7 @@ public class MapScreen extends BaseScreen {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         // background
         renderBackground(context, mouseX, mouseY, delta);
-        context.fill(0, 0, width, height, ConfigManager.getConfig().backgroundColor);
+        context.fill(0, 0, width, height, ConfigManager.getConfig().backgroundColor.getValue());
 
         // render map
         for (Drawable drawable : drawables)

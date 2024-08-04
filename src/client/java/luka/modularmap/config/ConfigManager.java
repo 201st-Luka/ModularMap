@@ -57,4 +57,12 @@ public class ConfigManager {
     public static ModularMapConfig getConfig() {
         return config;
     }
+
+    public static void updateConfig(ModularMapConfig config) {
+        if (ConfigManager.config == config)
+            ModularMapClient.LOGGER.warn("Config is the same object as the current config.");
+
+        ConfigManager.config = config;
+        saveConfig();
+    }
 }

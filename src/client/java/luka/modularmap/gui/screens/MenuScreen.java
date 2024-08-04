@@ -6,10 +6,6 @@ import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.screen.Screen;
 
 public class MenuScreen extends BaseScreen {
-    public static final int PADDING = 5,
-            TEXT_WIDTH = 100,
-            TEXT_HEIGHT = 20;
-
     public MenuScreen(String title, Screen parent) {
         super(title, parent);
     }
@@ -19,7 +15,7 @@ public class MenuScreen extends BaseScreen {
     }
 
     protected int calculateHeaderHeight() {
-        return height / 10;
+        return Math.max(height / 10, textRenderer.fontHeight + 4);
     }
 
     protected int calculateContentHeight() {
@@ -27,7 +23,7 @@ public class MenuScreen extends BaseScreen {
     }
 
     protected int calculateFooterHeight() {
-        return height / 10;
+        return Math.max(height / 10, textHeight + padding * 2);
     }
 
     protected int calculateSpacingWidth() {
@@ -43,7 +39,7 @@ public class MenuScreen extends BaseScreen {
     }
 
     protected int calculateTitleTextY() {
-        return calculateHeaderHeight() / 2 - TEXT_HEIGHT / 2;
+        return calculateHeaderHeight() / 2 - textRenderer.fontHeight / 2;
     }
 
     @Override
@@ -54,18 +50,19 @@ public class MenuScreen extends BaseScreen {
         renderBackground(context, mouseX, mouseY, delta);
 
         // header
-        context.fill(0, 0, width, headerHeight, ConfigManager.getConfig().headerColor);
+        context.fill(0, 0, width, headerHeight, ConfigManager.getConfig().headerColor.getValue());
         context.drawText(
                 textRenderer,
                 title,
                 calculateTitleTextX(), calculateTitleTextY(),
-                ConfigManager.getConfig().headerTextColor,
+                ConfigManager.getConfig().headerTextColor.getValue(),
                 true
         );
         // background
-        context.fill(0, headerHeight, width, headerHeight + contentHeight, ConfigManager.getConfig().backgroundColor);
+        context.fill(0, headerHeight, width, headerHeight + contentHeight,
+                ConfigManager.getConfig().backgroundColor.getValue());
         // footer
-        context.fill(0, headerHeight + contentHeight, width, height, ConfigManager.getConfig().footerColor);
+        context.fill(0, headerHeight + contentHeight, width, height, ConfigManager.getConfig().footerColor.getValue());
 
         for (Drawable drawable : drawables)
             drawable.render(context, mouseX, mouseY, delta);
