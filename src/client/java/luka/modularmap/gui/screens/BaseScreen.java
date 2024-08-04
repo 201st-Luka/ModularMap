@@ -18,7 +18,7 @@ public class BaseScreen extends Screen {
     public static final int FRAME_SPACING = 2,
             PADDING = 2,
             BUTTON_SIZE = 8,
-            TEXT_WIDTH = 32,
+            TEXT_WIDTH = 40,
             TEXT_HEIGHT = 8;
     protected final int padding,
             textWidth,

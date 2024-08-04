@@ -75,7 +75,7 @@ public class Color implements Cloneable {
 
     @Override
     public String toString() {
-        return String.format("(%b, %b, %b, %b)", getRed(), getGreen(), getBlue(), getAlpha());
+        return toHex();
     }
 
     @Override

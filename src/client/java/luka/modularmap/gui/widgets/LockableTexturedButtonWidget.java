@@ -25,21 +25,21 @@ public class LockableTexturedButtonWidget extends TexturedButtonWidget {
                                         PressAction pressAction, boolean locked) {
         this(x, y, width, height, textures, pressAction);
 
-        locked = locked;
+        this.locked = locked;
     }
 
     public LockableTexturedButtonWidget(int x, int y, int width, int height, ButtonTextures textures,
                                         PressAction pressAction, Text text, boolean locked) {
         this(x, y, width, height, textures, pressAction, text);
 
-        locked = locked;
+        this.locked = locked;
     }
 
     public LockableTexturedButtonWidget(int width, int height, ButtonTextures textures, PressAction pressAction,
                                         Text text, boolean locked) {
         this(width, height, textures, pressAction, text);
 
-        locked = locked;
+        this.locked = locked;
     }
 
     public void setLocked(boolean locked) {

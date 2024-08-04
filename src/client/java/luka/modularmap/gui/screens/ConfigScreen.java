@@ -50,7 +50,7 @@ public class ConfigScreen extends MenuScreen {
 
             AtomicBoolean modified = new AtomicBoolean(false);
             try {
-                modified.set(field.get(config) == field.get(ConfigManager.getConfig()));
+                modified.set(!field.get(config).equals(field.get(defaultConfig)));
             } catch (IllegalAccessException e) {
                 client.getToastManager().add(SystemToast.create(
                         client,
@@ -74,17 +74,18 @@ public class ConfigScreen extends MenuScreen {
                 ));
                 ModularMapClient.LOGGER.error("Failed to get field value: {}", field.getName(), e);
             }
+            EditBoxWidget editBox;
             if (value == null) {
-                addDrawable(new EditBoxWidget(
+                editBox = new EditBoxWidget(
                         textRenderer,
                         spacingWidth + columnWidth - textWidth - padding - buttonSize,
                         contentStartHeight + row * (textHeight + padding),
                         textWidth, textHeight,
                         Text.literal("null"),
                         Text.literal("")
-                ));
+                );
+                addDrawable(editBox);
             } else if (value instanceof Color color) {
-                EditBoxWidget editBox;
                 try {
                     editBox = new EditBoxWidget(
                             textRenderer,
@@ -102,8 +103,7 @@ public class ConfigScreen extends MenuScreen {
                 editBox.setChangeListener(s -> {
                     try {
                         color.setHex(s);
-                        if (color != field.get(ConfigManager.getConfig()))
-                            modified.set(true);
+                        modified.set(!color.equals(field.get(defaultConfig)));
                     } catch (NumberFormatException e) {
                         client.getToastManager().add(SystemToast.create(
                                 client,
@@ -130,16 +130,18 @@ public class ConfigScreen extends MenuScreen {
                         color
                 ));
             } else {
-                addDrawable(new EditBoxWidget(
+                editBox = new EditBoxWidget(
                         textRenderer,
                         spacingWidth + columnWidth - textWidth - padding - buttonSize,
                         contentStartHeight + row * (textHeight + padding),
                         textWidth, textHeight,
                         Text.literal(value.toString()),
                         Text.literal("")
-                ));
+                );
+                addDrawableChild(editBox);
             }
 
+            // TODO make the button update on edit box change
             addDrawable(new LockableTexturedButtonWidget(
                     spacingWidth + columnWidth - buttonSize, contentStartHeight + row++ * (textHeight + padding),
                     buttonSize, buttonSize,
@@ -150,7 +152,7 @@ public class ConfigScreen extends MenuScreen {
                     ),
                     button -> {
                         try {
-                            field.set(config, field.get(defaultConfig));
+                            editBox.setText(field.get(defaultConfig).toString());
                         } catch (IllegalAccessException e) {
                             throw new RuntimeException(e);
                         }
