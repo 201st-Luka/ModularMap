@@ -91,3 +91,8 @@ publishing {
 		// retrieving dependencies.
 	}
 }
+
+// enable data generation
+fabricApi {
+	configureDataGeneration()
+}

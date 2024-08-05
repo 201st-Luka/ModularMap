@@ -15,6 +15,9 @@
 	"icon": "assets/modularmap/icon.png",
 	"environment": "*",
 	"entrypoints": {
+		"fabric-datagen": [
+      		"luka.modularmap.ModularMapDataGenerator"
+    	],
 		"main": [
 			"luka.modularmap.ModularMap"
 		],
