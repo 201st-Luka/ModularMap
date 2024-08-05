@@ -1,6 +1,6 @@
 package luka.modularmap.gui.screens;
 
-import luka.modularmap.ModularMapClient;
+import luka.modularmap.ModularMapClientEntryPoint;
 import luka.modularmap.config.Color;
 import luka.modularmap.config.ConfigManager;
 import luka.modularmap.config.ModularMapConfig;
@@ -58,7 +58,7 @@ public class ConfigScreen extends MenuScreen {
                         Text.of("IllegalAccessException"),
                         Text.of("Failed to compare field value: " + field.getName())
                 ));
-                ModularMapClient.LOGGER.error("Failed to compare field value: {}", field.getName(), e);
+                ModularMapClientEntryPoint.LOGGER.error("Failed to compare field value: {}", field.getName(), e);
                 modified.set(false);
             }
 
@@ -72,7 +72,7 @@ public class ConfigScreen extends MenuScreen {
                         Text.of("IllegalAccessException"),
                         Text.of("Failed to get field value: " + field.getName())
                 ));
-                ModularMapClient.LOGGER.error("Failed to get field value: {}", field.getName(), e);
+                ModularMapClientEntryPoint.LOGGER.error("Failed to get field value: {}", field.getName(), e);
             }
             EditBoxWidget editBox;
             if (value == null) {
@@ -111,7 +111,7 @@ public class ConfigScreen extends MenuScreen {
                                 Text.of("NumberFormatException"),
                                 Text.of("Failed to set color: " + s)
                         ));
-                        ModularMapClient.LOGGER.error("Failed to set color: {}", s, e);
+                        ModularMapClientEntryPoint.LOGGER.error("Failed to set color: {}", s, e);
                     } catch (IllegalAccessException e) {
                         client.getToastManager().add(SystemToast.create(
                                 client,
@@ -119,7 +119,7 @@ public class ConfigScreen extends MenuScreen {
                                 Text.of("IllegalAccessException"),
                                 Text.of("Failed to set field value: " + field.getName())
                         ));
-                        ModularMapClient.LOGGER.error("Failed to set field value: {}", field.getName(), e);
+                        ModularMapClientEntryPoint.LOGGER.error("Failed to set field value: {}", field.getName(), e);
                     }
                 });
                 addDrawableChild(editBox);
@@ -146,9 +146,9 @@ public class ConfigScreen extends MenuScreen {
                     spacingWidth + columnWidth - BUTTON_SIZE, contentStartHeight + row++ * (TEXT_HEIGHT + PADDING),
                     BUTTON_SIZE, BUTTON_SIZE,
                     new ButtonTextures(
-                            Identifier.of(ModularMapClient.MOD_ID, "map/buttons/reset"),
-                            Identifier.of(ModularMapClient.MOD_ID, "map/buttons/reset_disabled"),
-                            Identifier.of(ModularMapClient.MOD_ID, "map/buttons/reset_highlighted")
+                            Identifier.of(ModularMapClientEntryPoint.MOD_ID, "map/buttons/reset"),
+                            Identifier.of(ModularMapClientEntryPoint.MOD_ID, "map/buttons/reset_disabled"),
+                            Identifier.of(ModularMapClientEntryPoint.MOD_ID, "map/buttons/reset_highlighted")
                     ),
                     button -> {
                         try {

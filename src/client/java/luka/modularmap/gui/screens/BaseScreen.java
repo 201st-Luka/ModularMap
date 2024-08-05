@@ -1,6 +1,7 @@
 package luka.modularmap.gui.screens;
 
 import com.google.common.collect.Lists;
+import luka.modularmap.util.IModularMapClient;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
@@ -13,6 +14,7 @@ import java.util.List;
 public class BaseScreen extends Screen {
     protected final Screen parent;
     protected final List<Drawable> drawables = Lists.<Drawable>newArrayList();
+    protected IModularMapClient modularMapClient = (IModularMapClient) MinecraftClient.getInstance();
 
     public static final int FRAME_SPACING = 6,
             PADDING = 6,
@@ -23,6 +25,18 @@ public class BaseScreen extends Screen {
     public BaseScreen(String title, Screen parent) {
         super(Text.literal(title));
         this.parent = parent;
+    }
+
+    protected boolean isLeftClickButton(int button) {
+		return button == 0;
+	}
+
+    protected boolean isRightClickButton(int button) {
+        return button == 1;
+    }
+
+    protected boolean isMiddleClickButton(int button) {
+        return button == 2;
     }
 
     @Override

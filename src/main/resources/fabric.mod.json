@@ -16,13 +16,13 @@
 	"environment": "*",
 	"entrypoints": {
 		"fabric-datagen": [
-      		"luka.modularmap.ModularMapDataGenerator"
+			"luka.modularmap.datagen.ModularMapDataGenerator"
     	],
 		"main": [
 			"luka.modularmap.ModularMap"
 		],
 		"client": [
-			"luka.modularmap.ModularMapClient"
+			"luka.modularmap.ModularMapClientEntryPoint"
 		],
 		"modmenu": [
 			"luka.modularmap.compat.modmenu.ModMenuApiImpl"
