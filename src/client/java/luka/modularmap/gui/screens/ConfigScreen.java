@@ -40,11 +40,11 @@ public class ConfigScreen extends MenuScreen {
                 columnWidth = calculateColumnWidth();
 
         for (Field field : ModularMapConfig.class.getDeclaredFields()) {
-            int contentStartHeight = calculateHeaderHeight() + padding;
+            int contentStartHeight = calculateHeaderHeight() + PADDING;
 
             addDrawable(new TextWidget(
-                    spacingWidth, contentStartHeight + row * (textHeight + padding),
-                    textWidth, textHeight,
+                    spacingWidth, contentStartHeight + row * (TEXT_HEIGHT + PADDING),
+                    TEXT_WIDTH, TEXT_HEIGHT,
                     Text.literal(field.getName()), textRenderer
             ));
 
@@ -78,9 +78,9 @@ public class ConfigScreen extends MenuScreen {
             if (value == null) {
                 editBox = new EditBoxWidget(
                         textRenderer,
-                        spacingWidth + columnWidth - textWidth - padding - buttonSize,
-                        contentStartHeight + row * (textHeight + padding),
-                        textWidth, textHeight,
+                        spacingWidth + columnWidth - TEXT_WIDTH - PADDING - BUTTON_SIZE,
+                        contentStartHeight + row * (TEXT_HEIGHT + PADDING),
+                        TEXT_WIDTH, TEXT_HEIGHT,
                         Text.literal("null"),
                         Text.literal("")
                 );
@@ -89,9 +89,9 @@ public class ConfigScreen extends MenuScreen {
                 try {
                     editBox = new EditBoxWidget(
                             textRenderer,
-                            spacingWidth + columnWidth - textWidth - padding - buttonSize,
-                            contentStartHeight + row * (textHeight + padding),
-                            textWidth - padding - buttonSize, textHeight,
+                            spacingWidth + columnWidth - TEXT_WIDTH - PADDING - BUTTON_SIZE,
+                            contentStartHeight + row * (TEXT_HEIGHT + PADDING),
+                            TEXT_WIDTH - PADDING - BUTTON_SIZE, TEXT_HEIGHT,
                             Text.literal(((Color) field.get(defaultConfig)).toHex()),
                             Text.literal("Hex color")
                     );
@@ -124,17 +124,17 @@ public class ConfigScreen extends MenuScreen {
                 });
                 addDrawableChild(editBox);
                 addDrawable(new ColorDisplayWidget(
-                        spacingWidth + columnWidth - padding - buttonSize * 2,
-                        contentStartHeight + row * (textHeight + padding),
-                        buttonSize, buttonSize,
+                        spacingWidth + columnWidth - PADDING - BUTTON_SIZE * 2,
+                        contentStartHeight + row * (TEXT_HEIGHT + PADDING),
+                        BUTTON_SIZE, BUTTON_SIZE,
                         color
                 ));
             } else {
                 editBox = new EditBoxWidget(
                         textRenderer,
-                        spacingWidth + columnWidth - textWidth - padding - buttonSize,
-                        contentStartHeight + row * (textHeight + padding),
-                        textWidth, textHeight,
+                        spacingWidth + columnWidth - TEXT_WIDTH - PADDING - BUTTON_SIZE,
+                        contentStartHeight + row * (TEXT_HEIGHT + PADDING),
+                        TEXT_WIDTH, TEXT_HEIGHT,
                         Text.literal(value.toString()),
                         Text.literal("")
                 );
@@ -143,8 +143,8 @@ public class ConfigScreen extends MenuScreen {
 
             // TODO make the button update on edit box change
             addDrawable(new LockableTexturedButtonWidget(
-                    spacingWidth + columnWidth - buttonSize, contentStartHeight + row++ * (textHeight + padding),
-                    buttonSize, buttonSize,
+                    spacingWidth + columnWidth - BUTTON_SIZE, contentStartHeight + row++ * (TEXT_HEIGHT + PADDING),
+                    BUTTON_SIZE, BUTTON_SIZE,
                     new ButtonTextures(
                             Identifier.of(ModularMapClient.MOD_ID, "map/buttons/reset"),
                             Identifier.of(ModularMapClient.MOD_ID, "map/buttons/reset_disabled"),
@@ -164,9 +164,9 @@ public class ConfigScreen extends MenuScreen {
 
         addDrawableChild(
                 ButtonWidget.builder(Text.literal("Cancel"), button -> close())
-                        .dimensions(spacingWidth + columnWidth / 2 - textWidth - padding / 2,
-                                calculateHeaderHeight() + calculateContentHeight() + padding,
-                                textWidth, textHeight)
+                        .dimensions(spacingWidth + columnWidth / 2 - TEXT_WIDTH - PADDING / 2,
+                                calculateHeaderHeight() + calculateContentHeight() + PADDING,
+                                TEXT_WIDTH, TEXT_HEIGHT)
                         .tooltip(Tooltip.of(Text.literal("Discard changes")))
                         .build()
         );
@@ -175,9 +175,9 @@ public class ConfigScreen extends MenuScreen {
                                 ConfigManager.updateConfig(config);
                                 close();
                         })
-                        .dimensions(spacingWidth + columnWidth / 2 + padding / 2,
-                                calculateHeaderHeight() + calculateContentHeight() + padding,
-                                textWidth, textHeight)
+                        .dimensions(spacingWidth + columnWidth / 2 + PADDING / 2,
+                                calculateHeaderHeight() + calculateContentHeight() + PADDING,
+                                TEXT_WIDTH, TEXT_HEIGHT)
                         .tooltip(Tooltip.of(Text.literal("Apply changes")))
                         .build()
         );

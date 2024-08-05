@@ -23,7 +23,7 @@ public class MenuScreen extends BaseScreen {
     }
 
     protected int calculateFooterHeight() {
-        return Math.max(height / 10, textHeight + padding * 2);
+        return Math.max(height / 10, TEXT_HEIGHT + PADDING * 2);
     }
 
     protected int calculateSpacingWidth() {

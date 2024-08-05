@@ -14,29 +14,15 @@ public class BaseScreen extends Screen {
     protected final Screen parent;
     protected final List<Drawable> drawables = Lists.<Drawable>newArrayList();
 
-    protected final double scaleFactor;
-    public static final int FRAME_SPACING = 2,
-            PADDING = 2,
-            BUTTON_SIZE = 8,
-            TEXT_WIDTH = 40,
-            TEXT_HEIGHT = 8;
-    protected final int padding,
-            textWidth,
-            textHeight,
-            frameSpacing,
-            buttonSize;
+    public static final int FRAME_SPACING = 6,
+            PADDING = 6,
+            BUTTON_SIZE = 24,
+            TEXT_WIDTH = 120,
+            TEXT_HEIGHT = 24;
 
     public BaseScreen(String title, Screen parent) {
         super(Text.literal(title));
         this.parent = parent;
-
-        scaleFactor = MinecraftClient.getInstance().getWindow().getScaleFactor();
-
-        frameSpacing = (int) (FRAME_SPACING * scaleFactor);
-        padding = (int) (PADDING * scaleFactor);
-        buttonSize = (int) (BUTTON_SIZE * scaleFactor);
-        textWidth = (int) (TEXT_WIDTH * scaleFactor);
-        textHeight = (int) (TEXT_HEIGHT * scaleFactor);
     }
 
     @Override
@@ -59,5 +45,10 @@ public class BaseScreen extends Screen {
     @Override
     public void close() {
         client.setScreen(parent);
+    }
+
+    @Override
+    public boolean shouldPause() {
+        return false;
     }
 }
