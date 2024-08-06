@@ -11,7 +11,7 @@
 		"homepage": "https://201st-legion.dev/",
 		"sources": "https://github.com/201st-Luka/ModularMap"
 	},
-	"license": "CC0-1.0",
+	"license": "AGPL-3.0 license",
 	"icon": "assets/modularmap/icon.png",
 	"environment": "*",
 	"entrypoints": {
