@@ -1,10 +1,30 @@
+/*
+ * ModularMap
+ * Copyright (c) 2024 201st-Luka
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package luka.modularmap.gui.screens;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import luka.modularmap.ModularMapClientEntryPoint;
+import luka.modularmap.ModularMapClient;
 import luka.modularmap.config.ConfigManager;
 import luka.modularmap.event.KeyInputHandler;
-import luka.modularmap.map.ChunkManager;
+import luka.modularmap.map.MapManager;
+import luka.modularmap.world.CompressedBlock;
+import luka.modularmap.world.CompressedChunk;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
@@ -20,15 +40,15 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.ChunkPos;
 import org.joml.Matrix4f;
 
-import java.util.Set;
+import java.util.Map;
 
 @Environment(EnvType.CLIENT)
 public class MapScreen extends BaseScreen {
     private static final int GRID_COLOR = 0x40000000;
-    private final Set<ChunkPos> loadedChunks, unloadedChunks;
+    private final MapManager mapManager;
     private final ClientPlayerEntity player;
-    private double scale, deltaXCache, deltaZCache;
-    private int centerX, centerZ;
+    private double scale;
+    private double centerX, centerZ;
     private boolean isInitialized = false;
 
     public MapScreen() {
@@ -36,9 +56,7 @@ public class MapScreen extends BaseScreen {
 
         player = MinecraftClient.getInstance().player;
 
-        ChunkManager chunkManager = modularMapClient.modularMap$getChunkManager();
-        loadedChunks = chunkManager.getLoadedChunks();
-        unloadedChunks = chunkManager.getUnloadedChunks();
+        mapManager = modularMapClient.modularMap$getChunkManager();
 
         scale = 1;
     }
@@ -48,16 +66,16 @@ public class MapScreen extends BaseScreen {
         if (!isInitialized) {
             isInitialized = true;
 
-            centerX = width / 2;
-            centerZ = height / 2;
+            centerX = (double) width / 2;
+            centerZ = (double) height / 2;
         }
 
         ButtonWidget configButton = new TexturedButtonWidget(
                 width - FRAME_SPACING - BUTTON_SIZE, height - FRAME_SPACING - BUTTON_SIZE,
                 BUTTON_SIZE, BUTTON_SIZE,
                 new ButtonTextures(
-                    Identifier.of(ModularMapClientEntryPoint.MOD_ID, "map/buttons/config"),
-                    Identifier.of(ModularMapClientEntryPoint.MOD_ID, "map/buttons/config_highlighted")
+                        Identifier.of(ModularMapClient.MOD_ID, "map/buttons/config"),
+                        Identifier.of(ModularMapClient.MOD_ID, "map/buttons/config_highlighted")
                 ),
                 button -> client.setScreen(new ConfigScreen(this)),
                 Text.literal("Configuration")
@@ -66,15 +84,26 @@ public class MapScreen extends BaseScreen {
                         width - FRAME_SPACING - BUTTON_SIZE, height - FRAME_SPACING - BUTTON_SIZE * 2 - PADDING,
                         BUTTON_SIZE, BUTTON_SIZE,
                         new ButtonTextures(
-                                Identifier.of(ModularMapClientEntryPoint.MOD_ID, "map/buttons/waypoints"),
-                                Identifier.of(ModularMapClientEntryPoint.MOD_ID, "map/buttons/waypoints_highlighted")
+                                Identifier.of(ModularMapClient.MOD_ID, "map/buttons/waypoints"),
+                                Identifier.of(ModularMapClient.MOD_ID, "map/buttons/waypoints_highlighted")
                         ),
                         button -> client.setScreen(new WaypointScreen(this)),
                         Text.literal("Waypoints")
+                ),
+                closeButton = new TexturedButtonWidget(
+                        width - FRAME_SPACING - BUTTON_SIZE, FRAME_SPACING,
+                        BUTTON_SIZE, BUTTON_SIZE,
+                        new ButtonTextures(
+                                Identifier.ofVanilla("widget/cross_button"),
+                                Identifier.ofVanilla("widget/cross_button_highlighted")
+                        ),
+                        button -> client.setScreen(null),
+                        Text.literal("Close")
                 );
 
         addDrawableChild(configButton);
         addDrawableChild(waypointButton);
+        addDrawableChild(closeButton);
     }
 
     @Override
@@ -134,13 +163,30 @@ public class MapScreen extends BaseScreen {
         );
     }
 
+    private void drawChunk(DrawContext context, ChunkPos chunkPos, CompressedChunk chunk, int playerRelX, int playerRelZ) {
+        int chunkStartX = calculateMapXStart(chunkPos.x, player.getChunkPos().x, playerRelX),
+                chunkStartZ = calculateMapZStart(chunkPos.z, player.getChunkPos().z, playerRelZ);
+        for (CompressedBlock block : chunk.getBlocks()) {
+            context.fill(
+                    chunkStartX + (int) ((block.getBlockX() % 16) * scale),
+                    chunkStartZ + (int) ((block.getBlockZ() % 16) * scale),
+                    chunkStartX + (int) ((block.getBlockX() % 16 + 1) * scale),
+                    chunkStartZ + (int) ((block.getBlockZ() % 16 + 1) * scale),
+                    block.getColor()
+            );
+            break;
+        }
+    }
+
     private void renderChunks(DrawContext context, int playerRelChunkX, int playerRelChunkZ) {
-        // render loaded chunks
-        for (ChunkPos chunk : loadedChunks)
-            drawChunk(context, chunk, player.getChunkPos(), playerRelChunkX, playerRelChunkZ, 0x8000FF00);
-        // render unloaded chunks
-        for (ChunkPos chunk : unloadedChunks)
-            drawChunk(context, chunk, player.getChunkPos(), playerRelChunkX, playerRelChunkZ, 0x80FF0000);
+//        // render loaded chunks
+//        for (Chunk chunk : loadedChunks)
+//            drawChunk(context, chunk.getPos(), player.getChunkPos(), playerRelChunkX, playerRelChunkZ, 0x8000FF00);
+//        // render unloaded chunks
+//        for (Chunk chunk : unloadedChunks)
+//            drawChunk(context, chunk.getPos(), player.getChunkPos(), playerRelChunkX, playerRelChunkZ, 0x80FF0000);
+        for (Map.Entry<ChunkPos, CompressedChunk> entry : mapManager.getChunkMap().entrySet())
+            drawChunk(context, entry.getKey(), entry.getValue(), playerRelChunkX, playerRelChunkZ);
     }
 
     private void renderGrid(DrawContext context, int playerRelChunkX, int playerRelChunkZ) {
@@ -182,13 +228,18 @@ public class MapScreen extends BaseScreen {
         renderChunks(context, playerRelChunkX, playerRelChunkZ);
 
         // draw current player chunk
-        drawChunk(context, player.getChunkPos(), player.getChunkPos(), playerRelChunkX, playerRelChunkZ, 0x800000FF);
+//        drawChunk(context, player.getChunkPos(), player.getChunkPos(), playerRelChunkX, playerRelChunkZ, 0x800000FF);
+//        drawChunk(context, player.getChunkPos(), mapManager.getChunkMap().get(player.getChunkPos()), playerRelChunkX, playerRelChunkZ);
 
         // render grid
         renderGrid(context, playerRelChunkX, playerRelChunkZ);
 
         // render player
-        context.fill(centerX - 2, centerZ - 2, centerX + 2, centerZ + 2, 0xFF0000FF);
+        context.fill(
+                (int) Math.round(centerX) - 2, (int) Math.round(centerZ) - 2,
+                (int) Math.round(centerX) + 2, (int) Math.round(centerZ) + 2,
+                0xFF0000FF
+        );
     }
 
     @Override
@@ -205,40 +256,37 @@ public class MapScreen extends BaseScreen {
             drawable.render(context, mouseX, mouseY, delta);
     }
 
+
     @SuppressWarnings("unused")
-	protected void onDrag(double mouseX, double mouseY, double deltaX, double deltaY) {
-        // update cache to get more precise dragging
-        deltaXCache += deltaX;
-        deltaZCache += deltaY;
-
-        // calculate int ratio
-        int dx = (int) deltaXCache,
-                dy = (int) deltaZCache;
-
-        // update center
-        centerX += dx;
-        centerZ += dy;
-
-        // update cache
-        deltaXCache -= dx;
-        deltaZCache -= dy;
-	}
+    protected void onDrag(double mouseX, double mouseY, double deltaX, double deltaY) {
+        centerX += deltaX;
+        centerZ += deltaY;
+    }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
         double change = verticalAmount * 0.1;
-        if (0.1 < scale + change && scale + change < 8)
+
+        if (0.1 < scale + change && scale + change < 8) {
             scale += change;
+
+            double deltaX = centerX - mouseX,
+                    deltaZ = centerZ - mouseY;
+
+            centerX += deltaX * change / scale;
+            centerZ += deltaZ * change / scale;
+        }
+
         return true;
     }
 
     @Override
-	public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-		if (isLeftClickButton(button)) {
-			onDrag(mouseX, mouseY, deltaX, deltaY);
-			return true;
-		} else {
-			return false;
-		}
-	}
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        if (isLeftClickButton(button)) {
+            onDrag(mouseX, mouseY, deltaX, deltaY);
+            return true;
+        } else {
+            return false;
+        }
+    }
 }

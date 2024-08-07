@@ -1,6 +1,24 @@
+/*
+ * ModularMap
+ * Copyright (c) 2024 201st-Luka
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package luka.modularmap.gui.screens;
 
-import luka.modularmap.ModularMapClientEntryPoint;
+import luka.modularmap.ModularMapClient;
 import luka.modularmap.config.Color;
 import luka.modularmap.config.ConfigManager;
 import luka.modularmap.config.ModularMapConfig;
@@ -12,7 +30,9 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.screen.ButtonTextures;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.widget.*;
+import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.widget.EditBoxWidget;
+import net.minecraft.client.gui.widget.TextWidget;
 import net.minecraft.client.toast.SystemToast;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -58,7 +78,7 @@ public class ConfigScreen extends MenuScreen {
                         Text.of("IllegalAccessException"),
                         Text.of("Failed to compare field value: " + field.getName())
                 ));
-                ModularMapClientEntryPoint.LOGGER.error("Failed to compare field value: {}", field.getName(), e);
+                ModularMapClient.LOGGER.error("Failed to compare field value: {}", field.getName(), e);
                 modified.set(false);
             }
 
@@ -72,7 +92,7 @@ public class ConfigScreen extends MenuScreen {
                         Text.of("IllegalAccessException"),
                         Text.of("Failed to get field value: " + field.getName())
                 ));
-                ModularMapClientEntryPoint.LOGGER.error("Failed to get field value: {}", field.getName(), e);
+                ModularMapClient.LOGGER.error("Failed to get field value: {}", field.getName(), e);
             }
             EditBoxWidget editBox;
             if (value == null) {
@@ -111,7 +131,7 @@ public class ConfigScreen extends MenuScreen {
                                 Text.of("NumberFormatException"),
                                 Text.of("Failed to set color: " + s)
                         ));
-                        ModularMapClientEntryPoint.LOGGER.error("Failed to set color: {}", s, e);
+                        ModularMapClient.LOGGER.error("Failed to set color: {}", s, e);
                     } catch (IllegalAccessException e) {
                         client.getToastManager().add(SystemToast.create(
                                 client,
@@ -119,7 +139,7 @@ public class ConfigScreen extends MenuScreen {
                                 Text.of("IllegalAccessException"),
                                 Text.of("Failed to set field value: " + field.getName())
                         ));
-                        ModularMapClientEntryPoint.LOGGER.error("Failed to set field value: {}", field.getName(), e);
+                        ModularMapClient.LOGGER.error("Failed to set field value: {}", field.getName(), e);
                     }
                 });
                 addDrawableChild(editBox);
@@ -146,9 +166,9 @@ public class ConfigScreen extends MenuScreen {
                     spacingWidth + columnWidth - BUTTON_SIZE, contentStartHeight + row++ * (TEXT_HEIGHT + PADDING),
                     BUTTON_SIZE, BUTTON_SIZE,
                     new ButtonTextures(
-                            Identifier.of(ModularMapClientEntryPoint.MOD_ID, "map/buttons/reset"),
-                            Identifier.of(ModularMapClientEntryPoint.MOD_ID, "map/buttons/reset_disabled"),
-                            Identifier.of(ModularMapClientEntryPoint.MOD_ID, "map/buttons/reset_highlighted")
+                            Identifier.of(ModularMapClient.MOD_ID, "map/buttons/reset"),
+                            Identifier.of(ModularMapClient.MOD_ID, "map/buttons/reset_disabled"),
+                            Identifier.of(ModularMapClient.MOD_ID, "map/buttons/reset_highlighted")
                     ),
                     button -> {
                         try {
@@ -172,8 +192,8 @@ public class ConfigScreen extends MenuScreen {
         );
         addDrawableChild(
                 ButtonWidget.builder(Text.literal("Apply"), button -> {
-                                ConfigManager.updateConfig(config);
-                                close();
+                            ConfigManager.updateConfig(config);
+                            close();
                         })
                         .dimensions(spacingWidth + columnWidth / 2 + PADDING / 2,
                                 calculateHeaderHeight() + calculateContentHeight() + PADDING,

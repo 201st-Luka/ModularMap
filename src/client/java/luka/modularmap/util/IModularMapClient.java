@@ -1,7 +1,8 @@
 package luka.modularmap.util;
 
-import luka.modularmap.map.ChunkManager;
+import luka.modularmap.map.MapManager;
 
 public interface IModularMapClient {
-    ChunkManager modularMap$getChunkManager();
+    MapManager modularMap$getChunkManager();
+
 }
