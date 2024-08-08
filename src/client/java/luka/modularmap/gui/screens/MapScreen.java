@@ -56,7 +56,7 @@ public class MapScreen extends BaseScreen {
 
         player = MinecraftClient.getInstance().player;
 
-        mapManager = modularMapClient.modularMap$getChunkManager();
+        mapManager = modularMapClient.modularMap$getMapManager();
 
         scale = 1;
     }

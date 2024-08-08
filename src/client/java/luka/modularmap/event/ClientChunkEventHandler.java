@@ -28,13 +28,13 @@ import net.minecraft.world.chunk.Chunk;
 public class ClientChunkEventHandler {
     public static void onChunkLoad(ClientWorld world, Chunk chunk) {
         IModularMapClient client = (IModularMapClient) MinecraftClient.getInstance();
-        MapManager mapManager = client.modularMap$getChunkManager();
+        MapManager mapManager = client.modularMap$getMapManager();
         mapManager.loadChunk(chunk);
     }
 
     public static void onChunkUnload(ClientWorld world, Chunk chunk) {
         IModularMapClient client = (IModularMapClient) MinecraftClient.getInstance();
-        MapManager mapManager = client.modularMap$getChunkManager();
+        MapManager mapManager = client.modularMap$getMapManager();
         mapManager.unloadChunk(chunk);
     }
 
