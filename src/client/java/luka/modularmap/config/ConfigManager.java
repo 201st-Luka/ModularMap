@@ -83,6 +83,4 @@ public class ConfigManager {
         ConfigManager.config = config;
         saveConfig();
     }
-
-
 }

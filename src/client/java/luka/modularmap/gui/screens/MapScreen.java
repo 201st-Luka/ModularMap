@@ -22,9 +22,9 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import luka.modularmap.ModularMapClient;
 import luka.modularmap.config.ConfigManager;
 import luka.modularmap.event.KeyInputHandler;
-import luka.modularmap.map.MapManager;
+import luka.modularmap.map.MapChunk;
+import luka.modularmap.map.WorldMap;
 import luka.modularmap.world.CompressedBlock;
-import luka.modularmap.world.CompressedChunk;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
@@ -35,17 +35,17 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TexturedButtonWidget;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.*;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.RotationAxis;
 import org.joml.Matrix4f;
-
-import java.util.Map;
 
 @Environment(EnvType.CLIENT)
 public class MapScreen extends BaseScreen {
     private static final int GRID_COLOR = 0x40000000;
-    private final MapManager mapManager;
+    private final WorldMap worldMap;
     private final ClientPlayerEntity player;
     private double scale;
     private double centerX, centerZ;
@@ -56,7 +56,7 @@ public class MapScreen extends BaseScreen {
 
         player = MinecraftClient.getInstance().player;
 
-        mapManager = modularMapClient.modularMap$getMapManager();
+        worldMap = modularMapClient.modularMap$getWorldMap();
 
         scale = 1;
     }
@@ -126,22 +126,6 @@ public class MapScreen extends BaseScreen {
         return player.getBlockZ() >= 0 ? player.getBlockZ() % 16 : 16 + player.getBlockZ() % 16;
     }
 
-    private int calculateMapXStart(int chunkX, int playerChunkX, int playerRelX) {
-        return (int) (((chunkX - playerChunkX) * 16 - playerRelX) * scale + centerX);
-    }
-
-    private int calculateMapZStart(int chunkZ, int playerChunkZ, int playerRelZ) {
-        return (int) (((chunkZ - playerChunkZ) * 16 - playerRelZ) * scale + centerZ);
-    }
-
-    private int calculateMapXEnd(int chunkX, int playerChunkX, int playerRelX) {
-        return (int) (((chunkX - playerChunkX) * 16 - playerRelX + 16) * scale + centerX);
-    }
-
-    private int calculateMapZEnd(int chunkZ, int playerChunkZ, int playerRelZ) {
-        return (int) (((chunkZ - playerChunkZ) * 16 - playerRelZ + 16) * scale + centerZ);
-    }
-
     private int calculateGridX(int x, int playerRelX) {
         return (int) ((x * 16 - playerRelX) * scale + centerX % (16 * scale));
     }
@@ -150,96 +134,108 @@ public class MapScreen extends BaseScreen {
         return (int) ((z * 16 - playerRelZ) * scale + centerZ % (16 * scale));
     }
 
-    private void drawChunk(DrawContext context,
-                           ChunkPos chunk, ChunkPos playerChunk,
-                           int playerRelX, int playerRelZ,
-                           int color) {
-        context.fill(
-                calculateMapXStart(chunk.x, playerChunk.x, playerRelX),
-                calculateMapZStart(chunk.z, playerChunk.z, playerRelZ),
-                calculateMapXEnd(chunk.x, playerChunk.x, playerRelX),
-                calculateMapZEnd(chunk.z, playerChunk.z, playerRelZ),
-                color
-        );
-    }
+    private void drawChunk(BufferBuilder buffer, Matrix4f transformationMatrix, MapChunk chunk) {
+        if (chunk != null) {
+            for (CompressedBlock[] blocks : chunk.getBlocks()) {
+                for (CompressedBlock block : blocks) {
+                    if (block == null) {
+                        continue;
+                    }
+                    BlockPos pos = block.getBlockPos();
+                    int blockColor = block.getColor();
 
-    private void drawChunk(DrawContext context, ChunkPos chunkPos, CompressedChunk chunk, int playerRelX, int playerRelZ) {
-        int chunkStartX = calculateMapXStart(chunkPos.x, player.getChunkPos().x, playerRelX),
-                chunkStartZ = calculateMapZStart(chunkPos.z, player.getChunkPos().z, playerRelZ);
-        for (CompressedBlock block : chunk.getBlocks()) {
-            context.fill(
-                    chunkStartX + (int) ((block.getBlockX() % 16) * scale),
-                    chunkStartZ + (int) ((block.getBlockZ() % 16) * scale),
-                    chunkStartX + (int) ((block.getBlockX() % 16 + 1) * scale),
-                    chunkStartZ + (int) ((block.getBlockZ() % 16 + 1) * scale),
-                    block.getColor()
-            );
-            break;
+                    buffer.vertex(transformationMatrix, pos.getX(), pos.getZ(), 5).color(blockColor);
+                    buffer.vertex(transformationMatrix, pos.getX(), pos.getZ() + 1, 5).color(blockColor);
+                    buffer.vertex(transformationMatrix, pos.getX() + 1, pos.getZ() + 1, 5).color(blockColor);
+                    buffer.vertex(transformationMatrix, pos.getX() + 1, pos.getZ(), 5).color(blockColor);
+                }
+            }
         }
     }
 
-    private void renderChunks(DrawContext context, int playerRelChunkX, int playerRelChunkZ) {
-//        // render loaded chunks
-//        for (Chunk chunk : loadedChunks)
-//            drawChunk(context, chunk.getPos(), player.getChunkPos(), playerRelChunkX, playerRelChunkZ, 0x8000FF00);
-//        // render unloaded chunks
-//        for (Chunk chunk : unloadedChunks)
-//            drawChunk(context, chunk.getPos(), player.getChunkPos(), playerRelChunkX, playerRelChunkZ, 0x80FF0000);
-        for (Map.Entry<ChunkPos, CompressedChunk> entry : mapManager.getChunkMap().entrySet())
-            drawChunk(context, entry.getKey(), entry.getValue(), playerRelChunkX, playerRelChunkZ);
+    private void renderChunks(DrawContext context) {
+        MatrixStack matrices = context.getMatrices();
+        matrices.push();
+        matrices.translate(centerX, centerZ, 0);
+        matrices.scale((float) scale, (float) scale, 1);
+
+        Matrix4f transformationMatrix = matrices.peek().getPositionMatrix();
+        Tessellator tessellator = Tessellator.getInstance();
+
+        BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+
+        for (MapChunk chunk : worldMap.getChunks(-20, -20, 40, 40))
+            drawChunk(buffer, transformationMatrix, chunk);
+
+        BufferRenderer.drawWithGlobalProgram(buffer.end());
+
+        matrices.pop();
     }
 
-    private void renderGrid(DrawContext context, int playerRelChunkX, int playerRelChunkZ) {
+    private void renderGrid(DrawContext context) {
         if (scale >= 0.7) {
-            Matrix4f transformationMatrix = context.getMatrices().peek().getPositionMatrix();
+            int playerRelChunkX = calculatePlayerRelChunkX(),
+                    playerRelChunkZ = calculatePlayerRelChunkZ();
+
+            MatrixStack matrices = context.getMatrices();
+            matrices.push();
+            matrices.translate(centerX, 0, 0);
+            matrices.scale((float) scale, 1, 1);
+
+            RenderSystem.lineWidth(10);
+            RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+
+            Matrix4f transformationMatrix = matrices.peek().getPositionMatrix();
             Tessellator tessellator = Tessellator.getInstance();
 
             BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
 
             // vertical lines
-            for (int i = 0, x = calculateGridX(i, playerRelChunkX);
-                 x <= width;
-                 x = calculateGridX(++i, playerRelChunkX)) {
-                buffer.vertex(transformationMatrix, x, 0, 0).color(GRID_COLOR);
-                buffer.vertex(transformationMatrix, x, height, 0).color(GRID_COLOR);
-            }
-            // horizontal lines
-            for (int i = 0, z = calculateGridZ(i, playerRelChunkZ);
-                 z <= height;
-                 z = calculateGridZ(++i, playerRelChunkZ)) {
-                buffer.vertex(transformationMatrix, 0, z, 0).color(GRID_COLOR);
-                buffer.vertex(transformationMatrix, width, z, 0).color(GRID_COLOR);
-            }
-
-            RenderSystem.setShader(GameRenderer::getPositionColorProgram);
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+            buffer.vertex(transformationMatrix, -playerRelChunkX, 0, 10).color(GRID_COLOR);
+            buffer.vertex(transformationMatrix, -playerRelChunkX, client.currentScreen.height, 10).color(GRID_COLOR);
 
             BufferRenderer.drawWithGlobalProgram(buffer.end());
+
+            matrices.pop();
         }
+    }
+
+    private void renderPlayer(DrawContext context) {
+        MatrixStack matrices = context.getMatrices();
+        matrices.push();
+        matrices.translate(centerX, centerZ, 0);
+        matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(player.getYaw() + 180));
+
+        Matrix4f transformationMatrix = matrices.peek().getPositionMatrix();
+        Tessellator tessellator = Tessellator.getInstance();
+
+        BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.TRIANGLE_FAN, VertexFormats.POSITION_COLOR);
+
+        buffer.vertex(transformationMatrix, 0, -5, 5).color(0xFFFF0000);
+        buffer.vertex(transformationMatrix, -5, 5, 5).color(0xFFFF6666);
+        buffer.vertex(transformationMatrix, 0, 3, 5).color(0xFFFF0000);
+        buffer.vertex(transformationMatrix, 5, 5, 5).color(0xFFFF6666);
+
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+
+        BufferRenderer.drawWithGlobalProgram(buffer.end());
+
+        matrices.pop();
     }
 
     @SuppressWarnings("unused")
     private void renderMap(DrawContext context, int mouseX, int mouseY, float delta) {
-        // calculate player relative chunk position
-        int playerRelChunkX = calculatePlayerRelChunkX(),
-                playerRelChunkZ = calculatePlayerRelChunkZ();
+        // todo: fix player not being placed at the right position
+        renderChunks(context);
 
-        // render chunks
-        renderChunks(context, playerRelChunkX, playerRelChunkZ);
+        renderGrid(context);
 
-        // draw current player chunk
-//        drawChunk(context, player.getChunkPos(), player.getChunkPos(), playerRelChunkX, playerRelChunkZ, 0x800000FF);
-//        drawChunk(context, player.getChunkPos(), mapManager.getChunkMap().get(player.getChunkPos()), playerRelChunkX, playerRelChunkZ);
-
-        // render grid
-        renderGrid(context, playerRelChunkX, playerRelChunkZ);
-
-        // render player
-        context.fill(
-                (int) Math.round(centerX) - 2, (int) Math.round(centerZ) - 2,
-                (int) Math.round(centerX) + 2, (int) Math.round(centerZ) + 2,
-                0xFF0000FF
-        );
+        renderPlayer(context);
     }
 
     @Override

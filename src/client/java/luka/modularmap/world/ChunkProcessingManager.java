@@ -16,23 +16,33 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package luka.modularmap.event;
+package luka.modularmap.world;
 
+
+import luka.modularmap.ModularMapClient;
+import luka.modularmap.map.MapChunk;
 import luka.modularmap.map.WorldMap;
-import luka.modularmap.util.IModularMapClient;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientChunkEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.world.ClientWorld;
 import net.minecraft.world.chunk.Chunk;
 
-public class ClientChunkEventHandler {
-    private static void onChunkLoad(ClientWorld world, Chunk chunk) {
-        IModularMapClient client = (IModularMapClient) MinecraftClient.getInstance();
-        WorldMap worldMap = client.modularMap$getWorldMap();
-        worldMap.addChunk(chunk);
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class ChunkProcessingManager {
+    private final ExecutorService executor;
+
+    public ChunkProcessingManager(int threadCount) {
+        this.executor = Executors.newFixedThreadPool(threadCount);
     }
 
-    public static void register() {
-        ClientChunkEvents.CHUNK_LOAD.register(ClientChunkEventHandler::onChunkLoad);
+    public void addChunkToQueue(Chunk chunk, WorldMap worldMap) {
+        executor.submit(() -> {
+            try {
+                MapChunk mapChunk = new MapChunk(chunk);
+
+                worldMap.setChunk(mapChunk);
+            } catch (Exception e) {
+                ModularMapClient.LOGGER.error("Error processing chunk: {}", chunk.getPos(), e);
+            }
+        });
     }
 }

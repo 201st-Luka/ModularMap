@@ -20,7 +20,6 @@ package luka.modularmap;
 
 import luka.modularmap.config.ConfigManager;
 import luka.modularmap.event.ClientChunkEventHandler;
-import luka.modularmap.event.ClientLifecycleEventHandler;
 import luka.modularmap.event.KeyInputHandler;
 import net.fabricmc.api.ClientModInitializer;
 import org.slf4j.Logger;
@@ -38,7 +37,6 @@ public class ModularMapClient implements ClientModInitializer {
         // Register event handlers
         KeyInputHandler.register();
         ClientChunkEventHandler.register();
-        ClientLifecycleEventHandler.register();
 
         // finished
         LOGGER.info("ModularMap clientside initialized!");

@@ -19,25 +19,28 @@
 package luka.modularmap.world;
 
 import net.minecraft.block.Block;
+import net.minecraft.registry.Registries;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
 
 public class CompressedBlock {
-    private final int blockX, blockZ, color;
+    private final BlockPos blockPos;
+    private final Identifier blockId;
 
-    public CompressedBlock(Block block, int x, int z) {
-        blockX = x;
-        blockZ = z;
-        color = block.getDefaultMapColor().color | 0xFF000000;
+    public CompressedBlock(Block block, BlockPos pos) {
+        blockPos = pos;
+        blockId = Registries.BLOCK.getId(block);
     }
 
-    public int getBlockX() {
-        return blockX;
+    public BlockPos getBlockPos() {
+        return blockPos;
     }
 
-    public int getBlockZ() {
-        return blockZ;
+    public Identifier getBlockId() {
+        return blockId;
     }
 
     public int getColor() {
-        return color;
+        return Registries.BLOCK.get(blockId).getDefaultMapColor().color | 0xFF000000;
     }
 }

@@ -18,9 +18,8 @@
 
 package luka.modularmap.util;
 
-import luka.modularmap.map.MapManager;
+import luka.modularmap.map.WorldMap;
 
 public interface IModularMapClient {
-    MapManager modularMap$getMapManager();
-
+    WorldMap modularMap$getWorldMap();
 }
