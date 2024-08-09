@@ -48,17 +48,14 @@ public class WorldMap {
     }
 
     public Vector<MapChunk> getChunks(ChunkPos start, ChunkPos end) {
-        return getChunks(start.x, start.z, end.x - start.x, end.z - start.z);
+        return getChunks(start.x, start.z, end.x, end.z);
     }
 
-    public Vector<MapChunk> getChunks(int chunkX, int chunkZ, int width, int height) {
+    public Vector<MapChunk> getChunks(int chunkStartX, int chunkStartZ, int chunkEndX, int chunkEndZ) {
         Vector<MapChunk> chunks = new Vector<>();
 
-        int endX = chunkX + width,
-                endZ = chunkZ + height;
-
-        for (int x = chunkX; x < endX; x++)
-            for (int z = chunkZ; z < endZ; z++)
+        for (int x = chunkStartX; x < chunkEndX; x++)
+            for (int z = chunkStartZ; z < chunkEndZ; z++)
                 chunks.add(getChunk(new ChunkPos(x, z)));
 
         return chunks;
