@@ -18,7 +18,7 @@
 
 package luka.modularmap.mixin.client;
 
-import luka.modularmap.map.MapManager;
+import luka.modularmap.map.WorldMap;
 import luka.modularmap.util.IModularMapClient;
 import net.minecraft.client.MinecraftClient;
 import org.spongepowered.asm.mixin.Mixin;
@@ -30,20 +30,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(MinecraftClient.class)
 public abstract class ModularMapClientMixin implements IModularMapClient {
     @Unique
-    private MapManager mapManager;
+    private WorldMap worldMap;
 
     @Override
-    public MapManager modularMap$getMapManager() {
-        return mapManager;
+    public WorldMap modularMap$getWorldMap() {
+        return worldMap;
     }
 
     @Inject(method = "joinWorld", at = @At("TAIL"))
     protected void onWorldJoin(CallbackInfo ci) {
-        mapManager = new MapManager();
+        worldMap = new WorldMap();
     }
 
     @Inject(method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;Z)V", at = @At("TAIL"))
     protected void onWorldLeave(CallbackInfo ci) {
-        mapManager = null;
+        worldMap = null;
     }
 }
