@@ -120,22 +120,6 @@ public class MapScreen extends BaseScreen {
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
-    private int calculatePlayerRelChunkX() {
-        return player.getBlockX() >= 0 ? player.getBlockX() % 16 : 16 + player.getBlockX() % 16;
-    }
-
-    private int calculatePlayerRelChunkZ() {
-        return player.getBlockZ() >= 0 ? player.getBlockZ() % 16 : 16 + player.getBlockZ() % 16;
-    }
-
-    private int calculateGridX(int x, int playerRelX) {
-        return (int) ((x * 16 - playerRelX) * scale + shiftX % (16 * scale));
-    }
-
-    private int calculateGridZ(int z, int playerRelZ) {
-        return (int) ((z * 16 - playerRelZ) * scale + shiftZ % (16 * scale));
-    }
-
     private void drawChunk(BufferBuilder buffer, Matrix4f transformationMatrix, MapChunk chunk) {
         if (chunk != null) {
             for (CompressedBlock[] blocks : chunk.getBlocks()) {
@@ -185,49 +169,71 @@ public class MapScreen extends BaseScreen {
         matrices.pop();
     }
 
-    private void renderGrid(DrawContext context) {
-        float lineWidth;
-        if (scale >= 1)
-            lineWidth = 2;
-        else if (scale >= 0.5)
-            lineWidth = 1;
-        else
-            lineWidth = 0;
-
-        int playerRelChunkX = calculatePlayerRelChunkX(),
-                playerRelChunkZ = calculatePlayerRelChunkZ();
+    private void renderVerticalGridLines(DrawContext context) {
+        int chunkStartX = (int) xToBlockX(0) / 16,
+                chunkEndX = (int) xToBlockX(width) / 16 + 2;
 
         MatrixStack matrices = context.getMatrices();
         matrices.push();
         matrices.translate(shiftX, 0, 0);
         matrices.scale((float) scale, 1, 0);
 
-        RenderSystem.lineWidth(lineWidth);
-        RenderSystem.setShader(GameRenderer::getRenderTypeLinesProgram);
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
         Matrix4f transformationMatrix = matrices.peek().getPositionMatrix();
         Tessellator tessellator = Tessellator.getInstance();
 
-        BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.LINES, VertexFormats.LINES);
+        BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
 
         // vertical lines
-        buffer.vertex(transformationMatrix, -playerRelChunkX, 0, 0)
-                .color(GRID_COLOR)
-                .normal(0, 1, 0);
-        buffer.vertex(transformationMatrix, -playerRelChunkX, height + 1, 0)
-                .color(GRID_COLOR)
-                .normal(0, 1, 0);
-        buffer.vertex(transformationMatrix, -playerRelChunkX + 16, 0, 0)
-                .color(GRID_COLOR)
-                .normal(0, 1, 0);
-        buffer.vertex(transformationMatrix, -playerRelChunkX + 16, height + 1, 0)
-                .color(GRID_COLOR)
-                .normal(0, 1, 0);
+        for (int x = chunkStartX; x <= chunkEndX; x++) {
+            buffer.vertex(transformationMatrix, x * 16, 0, 0)
+                    .color(GRID_COLOR);
+            buffer.vertex(transformationMatrix, x * 16, height + 1, 0)
+                    .color(GRID_COLOR);
+        }
 
         BufferRenderer.drawWithGlobalProgram(buffer.end());
 
         matrices.pop();
+    }
+
+    private void renderHorizontalGridLines(DrawContext context) {
+        int chunkStartZ = (int) zToBlockZ(0) / 16 - 1,
+                chunkEndZ = (int) zToBlockZ(height) / 16;
+
+        MatrixStack matrices = context.getMatrices();
+        matrices.push();
+        matrices.translate(0, shiftZ, 0);
+        matrices.scale(1, (float) scale, 0);
+
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+
+        Matrix4f transformationMatrix = matrices.peek().getPositionMatrix();
+        Tessellator tessellator = Tessellator.getInstance();
+
+        BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
+
+        // vertical lines
+        for (int z = chunkStartZ; z <= chunkEndZ; z++) {
+            buffer.vertex(transformationMatrix, 0, z * 16, 0)
+                    .color(GRID_COLOR);
+            buffer.vertex(transformationMatrix, width, z * 16, 0)
+                    .color(GRID_COLOR);
+        }
+
+        BufferRenderer.drawWithGlobalProgram(buffer.end());
+
+        matrices.pop();
+    }
+
+    private void renderGrid(DrawContext context) {
+        if (scale >= 0.5) {
+            renderVerticalGridLines(context);
+            renderHorizontalGridLines(context);
+        }
     }
 
     private void renderPlayer(DrawContext context) {
@@ -255,10 +261,9 @@ public class MapScreen extends BaseScreen {
     }
 
     private void renderMap(DrawContext context) {
-        // todo: fix player not being placed at the right position
         renderChunks(context);
 
-//        renderGrid(context);
+        renderGrid(context);
 
         renderPlayer(context);
     }
