@@ -1,9 +1,28 @@
+/*
+ * ModularMap
+ * Copyright (c) 2024 201st-Luka
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package luka.modularmap.gui.screens;
 
 import luka.modularmap.config.ConfigManager;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.screen.Screen;
+import org.jetbrains.annotations.NotNull;
 
 public class MenuScreen extends BaseScreen {
     public MenuScreen(String title, Screen parent) {
@@ -43,7 +62,7 @@ public class MenuScreen extends BaseScreen {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void render(@NotNull DrawContext context, int mouseX, int mouseY, float delta) {
         int headerHeight = calculateHeaderHeight(),
                 contentHeight = calculateContentHeight();
 

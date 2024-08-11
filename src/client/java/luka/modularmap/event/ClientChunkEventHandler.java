@@ -18,18 +18,18 @@
 
 package luka.modularmap.event;
 
-import luka.modularmap.map.WorldMap;
 import luka.modularmap.util.IModularMapClient;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientChunkEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.world.chunk.Chunk;
+import org.jetbrains.annotations.NotNull;
 
 public class ClientChunkEventHandler {
-    private static void onChunkLoad(ClientWorld world, Chunk chunk) {
-        IModularMapClient client = (IModularMapClient) MinecraftClient.getInstance();
-        WorldMap worldMap = client.modularMap$getWorldMap();
-        worldMap.addChunk(chunk);
+    private static void onChunkLoad(@NotNull ClientWorld world, @NotNull Chunk chunk) {
+        var modularMapClient = (IModularMapClient) MinecraftClient.getInstance();
+
+        modularMapClient.modularMap$getWorldMap().addChunk(chunk);
     }
 
     public static void register() {

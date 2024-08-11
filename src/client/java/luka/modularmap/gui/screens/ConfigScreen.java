@@ -42,18 +42,20 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @Environment(EnvType.CLIENT)
 public class ConfigScreen extends MenuScreen {
-    protected ModularMapConfig config,
-            defaultConfig = new ModularMapConfig();
+    protected ModularMapConfig _config,
+            _defaultConfig = new ModularMapConfig();
 
     public ConfigScreen(Screen parent) {
         super("ModularMap Config", parent);
 
-        config = ConfigManager.getConfig().clone();
+        _config = ConfigManager.getConfig().clone();
     }
 
     @Override
     public void init() {
         super.init();
+
+        assert client != null;
 
         int row = 0,
                 spacingWidth = calculateSpacingWidth(),
@@ -70,7 +72,7 @@ public class ConfigScreen extends MenuScreen {
 
             AtomicBoolean modified = new AtomicBoolean(false);
             try {
-                modified.set(!field.get(config).equals(field.get(defaultConfig)));
+                modified.set(!field.get(_config).equals(field.get(_defaultConfig)));
             } catch (IllegalAccessException e) {
                 client.getToastManager().add(SystemToast.create(
                         client,
@@ -84,7 +86,7 @@ public class ConfigScreen extends MenuScreen {
 
             Object value = null;
             try {
-                value = field.get(config);
+                value = field.get(_config);
             } catch (IllegalAccessException e) {
                 client.getToastManager().add(SystemToast.create(
                         client,
@@ -94,9 +96,9 @@ public class ConfigScreen extends MenuScreen {
                 ));
                 ModularMapClient.LOGGER.error("Failed to get field value: {}", field.getName(), e);
             }
-            EditBoxWidget editBox;
+            EditBoxWidget box;
             if (value == null) {
-                editBox = new EditBoxWidget(
+                box = new EditBoxWidget(
                         textRenderer,
                         spacingWidth + columnWidth - TEXT_WIDTH - PADDING - BUTTON_SIZE,
                         contentStartHeight + row * (TEXT_HEIGHT + PADDING),
@@ -104,26 +106,26 @@ public class ConfigScreen extends MenuScreen {
                         Text.literal("null"),
                         Text.literal("")
                 );
-                addDrawable(editBox);
+                addDrawable(box);
             } else if (value instanceof Color color) {
                 try {
-                    editBox = new EditBoxWidget(
+                    box = new EditBoxWidget(
                             textRenderer,
                             spacingWidth + columnWidth - TEXT_WIDTH - PADDING - BUTTON_SIZE,
                             contentStartHeight + row * (TEXT_HEIGHT + PADDING),
                             TEXT_WIDTH - PADDING - BUTTON_SIZE, TEXT_HEIGHT,
-                            Text.literal(((Color) field.get(defaultConfig)).toHex()),
+                            Text.literal(((Color) field.get(_defaultConfig)).toHex()),
                             Text.literal("Hex color")
                     );
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException(e);
                 }
-                editBox.setText(color.toHex());
-                editBox.setMaxLength(8);
-                editBox.setChangeListener(s -> {
+                box.setText(color.toHex());
+                box.setMaxLength(8);
+                box.setChangeListener(s -> {
                     try {
                         color.setHex(s);
-                        modified.set(!color.equals(field.get(defaultConfig)));
+                        modified.set(!color.equals(field.get(_defaultConfig)));
                     } catch (NumberFormatException e) {
                         client.getToastManager().add(SystemToast.create(
                                 client,
@@ -142,7 +144,7 @@ public class ConfigScreen extends MenuScreen {
                         ModularMapClient.LOGGER.error("Failed to set field value: {}", field.getName(), e);
                     }
                 });
-                addDrawableChild(editBox);
+                addDrawableChild(box);
                 addDrawable(new ColorDisplayWidget(
                         spacingWidth + columnWidth - PADDING - BUTTON_SIZE * 2,
                         contentStartHeight + row * (TEXT_HEIGHT + PADDING),
@@ -150,7 +152,7 @@ public class ConfigScreen extends MenuScreen {
                         color
                 ));
             } else {
-                editBox = new EditBoxWidget(
+                box = new EditBoxWidget(
                         textRenderer,
                         spacingWidth + columnWidth - TEXT_WIDTH - PADDING - BUTTON_SIZE,
                         contentStartHeight + row * (TEXT_HEIGHT + PADDING),
@@ -158,7 +160,7 @@ public class ConfigScreen extends MenuScreen {
                         Text.literal(value.toString()),
                         Text.literal("")
                 );
-                addDrawableChild(editBox);
+                addDrawableChild(box);
             }
 
             // TODO make the button update on edit box change
@@ -172,7 +174,7 @@ public class ConfigScreen extends MenuScreen {
                     ),
                     button -> {
                         try {
-                            editBox.setText(field.get(defaultConfig).toString());
+                            box.setText(field.get(_defaultConfig).toString());
                         } catch (IllegalAccessException e) {
                             throw new RuntimeException(e);
                         }
@@ -192,7 +194,7 @@ public class ConfigScreen extends MenuScreen {
         );
         addDrawableChild(
                 ButtonWidget.builder(Text.literal("Apply"), button -> {
-                            ConfigManager.updateConfig(config);
+                            ConfigManager.updateConfig(_config);
                             close();
                         })
                         .dimensions(spacingWidth + columnWidth / 2 + PADDING / 2,
@@ -205,7 +207,10 @@ public class ConfigScreen extends MenuScreen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (KeyInputHandler.openMapKey.matchesKey(keyCode, scanCode) && parent instanceof MapScreen) {
+        assert client != null;
+        assert client.player != null;
+
+        if (KeyInputHandler.openMapKeyBinding.matchesKey(keyCode, scanCode) && _parent instanceof MapScreen) {
             client.player.closeHandledScreen();
             return true;
         }

@@ -16,16 +16,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package luka.modularmap.compat.modmenu;
+package luka.modularmap.rendering;
 
+import luka.modularmap.map.WorldMap;
 
-import com.terraformersmc.modmenu.api.ConfigScreenFactory;
-import com.terraformersmc.modmenu.api.ModMenuApi;
-import luka.modularmap.gui.screens.ConfigScreen;
+public abstract class MapRenderer {
+    protected final WorldMap _map;
 
-public class ModMenuApiImpl implements ModMenuApi {
-    @Override
-    public ConfigScreenFactory<?> getModConfigScreenFactory() {
-        return ConfigScreen::new;
+    public MapRenderer(WorldMap map) {
+        _map = map;
     }
+
+    public abstract void render(WorldMap map);
 }

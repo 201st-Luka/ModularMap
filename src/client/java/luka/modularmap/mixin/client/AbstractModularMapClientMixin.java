@@ -28,22 +28,22 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(MinecraftClient.class)
-public abstract class ModularMapClientMixin implements IModularMapClient {
+public abstract class AbstractModularMapClientMixin implements IModularMapClient {
     @Unique
-    private WorldMap worldMap;
+    private WorldMap _worldMap;
 
     @Override
     public WorldMap modularMap$getWorldMap() {
-        return worldMap;
+        return _worldMap;
     }
 
     @Inject(method = "joinWorld", at = @At("TAIL"))
     protected void onWorldJoin(CallbackInfo ci) {
-        worldMap = new WorldMap();
+        _worldMap = new WorldMap();
     }
 
     @Inject(method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;Z)V", at = @At("TAIL"))
     protected void onWorldLeave(CallbackInfo ci) {
-        worldMap = null;
+        _worldMap = null;
     }
 }

@@ -22,50 +22,51 @@ import luka.modularmap.config.ConfigManager;
 import luka.modularmap.world.ChunkProcessingManager;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.Chunk;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class WorldMap {
-    private final java.util.Map<ChunkPos, MapChunk> chunkMap = new ConcurrentHashMap<>();
-    private final ChunkProcessingManager chunkProcessingManager;
+    private final java.util.Map<ChunkPos, MapChunk> _chunkMap = new ConcurrentHashMap<>();
+    private final ChunkProcessingManager _chunkProcessingManager;
 
     public WorldMap() {
-        this.chunkProcessingManager = new ChunkProcessingManager(ConfigManager.getConfig().chunkProcessingThreads);
+        _chunkProcessingManager = new ChunkProcessingManager(ConfigManager.getConfig().chunkProcessingThreads);
     }
 
-    public void addChunk(Chunk chunk) {
-        chunkProcessingManager.addChunkToQueue(chunk, this);
+    public void addChunk(@NotNull Chunk chunk) {
+        _chunkProcessingManager.addChunkToQueue(chunk, this);
     }
 
-    public MapChunk getChunk(ChunkPos pos) {
-        return chunkMap.getOrDefault(pos, null);
+    public MapChunk getChunk(@NotNull ChunkPos pos) {
+        return _chunkMap.getOrDefault(pos, null);
     }
 
     public MapChunk getChunk(int x, int z) {
         return getChunk(new ChunkPos(x, z));
     }
 
-    public Vector<MapChunk> getChunks(ChunkPos start, ChunkPos end) {
+    public Vector<MapChunk> getChunks(@NotNull ChunkPos start, @NotNull ChunkPos end) {
         return getChunks(start.x, start.z, end.x, end.z);
     }
 
     public Vector<MapChunk> getChunks(int chunkStartX, int chunkStartZ, int chunkEndX, int chunkEndZ) {
-        Vector<MapChunk> chunks = new Vector<>();
+        var chunks = new Vector<MapChunk>();
 
         for (int x = chunkStartX; x < chunkEndX; x++)
             for (int z = chunkStartZ; z < chunkEndZ; z++)
-                chunks.add(getChunk(new ChunkPos(x, z)));
+                chunks.add(getChunk(x, z));
 
         return chunks;
     }
 
     public void setChunk(MapChunk chunk) {
-        chunkMap.put(chunk.getChunkPos(), chunk);
+        _chunkMap.put(chunk.getChunkPos(), chunk);
     }
 
     public Set<java.util.Map.Entry<ChunkPos, MapChunk>> getChunkEntries() {
-        return chunkMap.entrySet();
+        return _chunkMap.entrySet();
     }
 }
