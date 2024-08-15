@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package luka.modularmap.rendering;
+package luka.modularmap.rendering.components;
 
 import com.google.common.base.Supplier;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -28,9 +28,10 @@ import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.util.math.MatrixStack;
 import org.jetbrains.annotations.NotNull;
-import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 import java.util.function.Consumer;
 
@@ -43,8 +44,37 @@ public abstract class AbstractRenderingHelper {
     protected final Tessellator _tessellator;
     protected final DrawContext _drawContext;
     protected final MatrixStack _matrices;
-    protected final Matrix4f _transformationMatrix;
     protected final BufferBuilder _bufferBuilder;
+    protected final MatrixStack.Entry _matrixStackPeek;
+
+    public AbstractRenderingHelper(@NotNull DrawContext drawContext,
+                                   Vector3d translation,
+                                   Vector3f scale,
+                                   Quaternionf rotation,
+                                   @NotNull VertexFormat.DrawMode drawMode,
+                                   @NotNull VertexFormat vertexFormat,
+                                   @NotNull Supplier<ShaderProgram> shaderProgram,
+                                   @NotNull Vector4f shaderColor) {
+        _drawContext = drawContext;
+
+        _matrices = _drawContext.getMatrices();
+        _matrices.push();
+        _matrixStackPeek = _matrices.peek();
+
+        RenderSystem.setShader(shaderProgram);
+        RenderSystem.setShaderColor(shaderColor.x, shaderColor.y, shaderColor.z, shaderColor.w);
+
+        _tessellator = Tessellator.getInstance();
+
+        _bufferBuilder = _tessellator.begin(drawMode, vertexFormat);
+
+        if (translation != null)
+            _matrices.translate(translation.x, translation.y, translation.z);
+        if (scale != null)
+            _matrices.scale(scale.x, scale.y, scale.z);
+        if (rotation != null)
+            _matrices.multiply(rotation);
+    }
 
     public void render(Consumer<BuiltBuffer> program) {
         try {
@@ -54,54 +84,5 @@ public abstract class AbstractRenderingHelper {
         }
 
         _matrices.pop();
-    }
-
-    public AbstractRenderingHelper(@NotNull DrawContext drawContext,
-                                   @NotNull VertexFormat.DrawMode drawMode,
-                                   @NotNull VertexFormat vertexFormat,
-                                   @NotNull Supplier<ShaderProgram> shaderProgram) {
-        _drawContext = drawContext;
-
-        _matrices = _drawContext.getMatrices();
-        _matrices.push();
-        _transformationMatrix = _matrices.peek().getPositionMatrix();
-
-        RenderSystem.setShader(shaderProgram);
-
-        _tessellator = Tessellator.getInstance();
-
-        _bufferBuilder = _tessellator.begin(drawMode, vertexFormat);
-    }
-
-    public AbstractRenderingHelper(DrawContext drawContext,
-                                   @NotNull Vector3d translation,
-                                   @NotNull VertexFormat.DrawMode drawMode,
-                                   @NotNull VertexFormat vertexFormat,
-                                   @NotNull Supplier<ShaderProgram> shaderProgram) {
-        this(drawContext, drawMode, vertexFormat, shaderProgram);
-
-        _matrices.translate(translation.x, translation.y, translation.z);
-    }
-
-    public AbstractRenderingHelper(DrawContext drawContext,
-                                   @NotNull Vector3f scale,
-                                   @NotNull VertexFormat.DrawMode drawMode,
-                                   @NotNull VertexFormat vertexFormat,
-                                   @NotNull Supplier<ShaderProgram> shaderProgram) {
-        this(drawContext, drawMode, vertexFormat, shaderProgram);
-
-        _matrices.scale(scale.x, scale.y, scale.z);
-    }
-
-    public AbstractRenderingHelper(DrawContext drawContext,
-                                   @NotNull Vector3d translation,
-                                   @NotNull Vector3f scale,
-                                   @NotNull VertexFormat.DrawMode drawMode,
-                                   @NotNull VertexFormat vertexFormat,
-                                   @NotNull Supplier<ShaderProgram> shaderProgram) {
-        this(drawContext, drawMode, vertexFormat, shaderProgram);
-
-        _matrices.translate(translation.x, translation.y, translation.z);
-        _matrices.scale(scale.x, scale.y, scale.z);
     }
 }

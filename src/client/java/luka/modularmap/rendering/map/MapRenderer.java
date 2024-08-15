@@ -16,16 +16,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package luka.modularmap.rendering;
+package luka.modularmap.rendering.map;
 
-import luka.modularmap.map.WorldMap;
+import luka.modularmap.map.MapController;
 
 public abstract class MapRenderer {
-    protected final WorldMap _map;
+    protected final MapController _map;
 
-    public MapRenderer(WorldMap map) {
+    public MapRenderer(MapController map) {
         _map = map;
     }
 
-    public abstract void render(WorldMap map);
+    public abstract void render(MapController map);
 }

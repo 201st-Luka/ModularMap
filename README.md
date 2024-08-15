@@ -2,8 +2,9 @@
 
 ---
 
-This Minecraft mod is a worldMap mod.
-The goal of this modification is to provide a worldMap that is modular and can be customized to the player's liking.
+This Minecraft mod is a mapController mod.
+The goal of this modification is to provide a mapController that is modular and can be customized to the player's
+liking.
 
 The mod is at an early stage of development and is not yet ready for use, but you can follow the progress on this page.
 The mod should also implement an API to communicate with other child mods in the future, but at the moment it is not
@@ -19,15 +20,17 @@ Not yet released, so it is difficult to say what features will be available in t
 
 Here is a list of planned features
 
-- [ ] World worldMap (fix rendering issues/bugs)
-- [ ] World worldMap available after restarting the game
+- [ ] World mapController (fix rendering issues/bugs)
+- [ ] World mapController available after restarting the game
 - [ ] Customizable waypoints
-- [ ] Ability to select another worldMap to be used (useful if the server has multiple IPs or if the server worldMap was
+- [ ] Ability to select another mapController to be used (useful if the server has multiple IPs or if the server
+  mapController was
   tested on a client and uploaded to the server, so all progress is kept)
 - [ ] Configuration menu
-- [ ] Server integration (ability to synchronise the worldMap to other clients that play on the same server using this
+- [ ] Server integration (ability to synchronise the mapController to other clients that play on the same server using
+  this
   mod)
-- [ ] API for other (child) mods (such as a minimap, a seed worldMap, a chunk debugging tool, etc.)
+- [ ] API for other (child) mods (such as a minimap, a seed mapController, a chunk debugging tool, etc.)
 
 ---
 

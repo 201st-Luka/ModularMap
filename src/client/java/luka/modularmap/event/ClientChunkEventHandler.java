@@ -29,7 +29,7 @@ public class ClientChunkEventHandler {
     private static void onChunkLoad(@NotNull ClientWorld world, @NotNull Chunk chunk) {
         var modularMapClient = (IModularMapClient) MinecraftClient.getInstance();
 
-        modularMapClient.modularMap$getWorldMap().addChunk(chunk);
+        modularMapClient.modularMap$getMapController().addChunk(chunk);
     }
 
     public static void register() {

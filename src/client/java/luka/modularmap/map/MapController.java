@@ -28,11 +28,11 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class WorldMap {
+public class MapController {
     private final java.util.Map<ChunkPos, MapChunk> _chunkMap = new ConcurrentHashMap<>();
     private final ChunkProcessingManager _chunkProcessingManager;
 
-    public WorldMap() {
+    public MapController() {
         _chunkProcessingManager = new ChunkProcessingManager(ConfigManager.getConfig().chunkProcessingThreads);
     }
 
@@ -68,5 +68,9 @@ public class WorldMap {
 
     public Set<java.util.Map.Entry<ChunkPos, MapChunk>> getChunkEntries() {
         return _chunkMap.entrySet();
+    }
+    
+    public void end() {
+        _chunkProcessingManager.end();
     }
 }

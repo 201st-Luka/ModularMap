@@ -18,12 +18,14 @@
 
 package luka.modularmap.gui.screens;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import luka.modularmap.ModularMapClient;
 import luka.modularmap.config.ConfigManager;
 import luka.modularmap.event.KeyInputHandler;
 import luka.modularmap.map.MapChunk;
-import luka.modularmap.map.WorldMap;
+import luka.modularmap.map.MapController;
+import luka.modularmap.rendering.components.DebugLineRenderingHelper;
+import luka.modularmap.rendering.components.PixelRenderingHelper;
+import luka.modularmap.rendering.components.TriangleFanRenderingHelper;
 import luka.modularmap.world.CompressedBlock;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -34,21 +36,23 @@ import net.minecraft.client.gui.screen.ButtonTextures;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TexturedButtonWidget;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.render.*;
-import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.render.BufferRenderer;
+import net.minecraft.client.render.GameRenderer;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.RotationAxis;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
+import org.joml.Vector3d;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 import java.util.Vector;
 
 @Environment(EnvType.CLIENT)
 public class MapScreen extends BaseScreen {
     private static final int GRID_COLOR = 0x40000000;
-    private final WorldMap _worldMap;
+    private final MapController _mapController;
     private final ClientPlayerEntity _player;
     private int _zoom = 0;
     private double _scale = 1 / Math.pow(2, (double) _zoom / 4);
@@ -61,7 +65,7 @@ public class MapScreen extends BaseScreen {
 
         _player = MinecraftClient.getInstance().player;
 
-        _worldMap = _modularMapClient.modularMap$getWorldMap();
+        _mapController = _modularMapClient.modularMap$getMapController();
     }
 
     @Override
@@ -131,114 +135,74 @@ public class MapScreen extends BaseScreen {
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
-    private void drawChunk(@NotNull BufferBuilder buffer,
-                           @NotNull Matrix4f transformationMatrix,
+    private void drawChunk(@NotNull PixelRenderingHelper renderer,
                            @Nullable MapChunk chunk) {
         if (chunk != null)
             for (CompressedBlock[] blocks : chunk.getBlocks())
-                for (CompressedBlock block : blocks) {
-                    int blockColor = block.getColor(),
-                            blockX = block.getBlockX(),
-                            blockZ = block.getBlockZ();
+                for (CompressedBlock block : blocks)
+                    renderer.drawPixel(block.getBlockX(), block.getBlockZ(), block.getColor());
 
-                    buffer.vertex(transformationMatrix, blockX, blockZ, 0).color(blockColor);
-                    buffer.vertex(transformationMatrix, blockX, blockZ + 1, 0).color(blockColor);
-                    buffer.vertex(transformationMatrix, blockX + 1, blockZ + 1, 0).color(blockColor);
-                    buffer.vertex(transformationMatrix, blockX + 1, blockZ, 0).color(blockColor);
-                }
     }
 
     private void renderChunks(@NotNull DrawContext context) {
-        MatrixStack matrices = context.getMatrices();
-        matrices.push();
-        matrices.translate(_shiftX - _player.getBlockX() * _scale, _shiftZ - _player.getBlockZ() * _scale, 0);
-        matrices.scale((float) _scale, (float) _scale, 1);
-
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-
-        Matrix4f transformationMatrix = matrices.peek().getPositionMatrix();
-        var tessellator = Tessellator.getInstance();
-
-        BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+        var pixelRenderingHelper = new PixelRenderingHelper(
+                context,
+                new Vector3d(_shiftX - _player.getBlockX() * _scale, _shiftZ - _player.getBlockZ() * _scale, 0),
+                new Vector3f((float) _scale, (float) _scale, 1),
+                GameRenderer::getPositionColorProgram,
+                new Vector4f(1.0F, 1.0F, 1.0F, 1.0F)
+        );
 
         // only render chunks that are visible on the map screen
         int chunkStartX = (int) xToBlockX(0) / 16 - 1,
                 chunkStartZ = (int) zToBlockZ(0) / 16 - 1,
                 chunkEndX = (int) xToBlockX(width) / 16 + 1,
                 chunkEndZ = (int) zToBlockZ(height) / 16 + 1;
-        Vector<MapChunk> chunks = _worldMap.getChunks(chunkStartX, chunkStartZ, chunkEndX, chunkEndZ);
+        Vector<MapChunk> chunks = _mapController.getChunks(chunkStartX, chunkStartZ, chunkEndX, chunkEndZ);
 
         for (MapChunk chunk : chunks)
-            drawChunk(buffer, transformationMatrix, chunk);
+            drawChunk(pixelRenderingHelper, chunk);
 
-        try {
-            BufferRenderer.drawWithGlobalProgram(buffer.end());
-        } catch (IllegalStateException ignored) {
-            // buffer is empty, nothing to render/draw
-        }
-
-        matrices.pop();
+        pixelRenderingHelper.render(BufferRenderer::drawWithGlobalProgram);
     }
 
     private void renderVerticalGridLines(@NotNull DrawContext context) {
+        var debugLineRenderingHelper = new DebugLineRenderingHelper(
+                context,
+                new Vector3d(_shiftX, 0, 0),
+                new Vector3f((float) _scale, 1, 1),
+                GameRenderer::getPositionColorProgram,
+                new Vector4f(1.0F, 1.0F, 1.0F, 1.0F)
+        );
+
         int chunkStartX = (int) xToBlockX(0) / 16,
                 chunkEndX = (int) xToBlockX(width) / 16 + 2;
 
-        MatrixStack matrices = context.getMatrices();
-        matrices.push();
-        matrices.translate(_shiftX, 0, 0);
-        matrices.scale((float) _scale, 1, 0);
-
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-
-        Matrix4f transformationMatrix = matrices.peek().getPositionMatrix();
-        var tessellator = Tessellator.getInstance();
-
-        BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
-
         // vertical lines
-        for (int x = chunkStartX; x <= chunkEndX; x++) {
-            buffer.vertex(transformationMatrix, x * 16, 0, 0)
-                    .color(GRID_COLOR);
-            buffer.vertex(transformationMatrix, x * 16, height + 1, 0)
-                    .color(GRID_COLOR);
-        }
+        for (int x = chunkStartX; x <= chunkEndX; x++)
+            debugLineRenderingHelper.drawLine(x * 16 - _player.getBlockX(), 0, x * 16 - _player.getBlockX(), height + 1, GRID_COLOR);
 
-        BufferRenderer.drawWithGlobalProgram(buffer.end());
 
-        matrices.pop();
+        debugLineRenderingHelper.render(BufferRenderer::drawWithGlobalProgram);
     }
 
     private void renderHorizontalGridLines(@NotNull DrawContext context) {
+        var debugLineRenderingHelper = new DebugLineRenderingHelper(
+                context,
+                new Vector3d(0, _shiftZ, 0),
+                new Vector3f(1, (float) _scale, 1),
+                GameRenderer::getPositionColorProgram,
+                new Vector4f(1.0F, 1.0F, 1.0F, 1.0F)
+        );
+
         int chunkStartZ = (int) zToBlockZ(0) / 16 - 1,
-                chunkEndZ = (int) zToBlockZ(height) / 16;
-
-        MatrixStack matrices = context.getMatrices();
-        matrices.push();
-        matrices.translate(0, _shiftZ, 0);
-        matrices.scale(1, (float) _scale, 0);
-
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-
-        Matrix4f transformationMatrix = matrices.peek().getPositionMatrix();
-        var tessellator = Tessellator.getInstance();
-
-        BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
+                chunkEndZ = (int) zToBlockZ(height) / 16 + 1;
 
         // vertical lines
-        for (int z = chunkStartZ; z <= chunkEndZ; z++) {
-            buffer.vertex(transformationMatrix, 0, z * 16, 0)
-                    .color(GRID_COLOR);
-            buffer.vertex(transformationMatrix, width, z * 16, 0)
-                    .color(GRID_COLOR);
-        }
+        for (int z = chunkStartZ; z <= chunkEndZ; z++)
+            debugLineRenderingHelper.drawLine(0, z * 16 - _player.getBlockZ(), width, z * 16 - _player.getBlockZ(), GRID_COLOR);
 
-        BufferRenderer.drawWithGlobalProgram(buffer.end());
-
-        matrices.pop();
+        debugLineRenderingHelper.render(BufferRenderer::drawWithGlobalProgram);
     }
 
     private void renderGrid(@NotNull DrawContext context) {
@@ -249,27 +213,22 @@ public class MapScreen extends BaseScreen {
     }
 
     private void renderPlayer(@NotNull DrawContext context) {
-        MatrixStack matrices = context.getMatrices();
-        matrices.push();
-        matrices.translate(_shiftX, _shiftZ, 0);
-        matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(_player.getYaw() + 180));
+        var triangleFanRenderingHelper = new TriangleFanRenderingHelper(
+                context,
+                new Vector3d(_shiftX, _shiftZ, 0),
+                RotationAxis.POSITIVE_Z.rotationDegrees(_player.getYaw() + 180),
+                GameRenderer::getPositionColorProgram,
+                new Vector4f(1.0F, 1.0F, 1.0F, 1.0F)
+        );
 
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        triangleFanRenderingHelper.drawFirstTriangleFan(
+                new Vector3f(0, -5, 0), 0xFFAA0000,
+                new Vector3f(-5, 5, 0), 0xFFFF6666,
+                new Vector3f(0, 3, 0), 0xFFAA0000
+        );
+        triangleFanRenderingHelper.drawTriangleFan(new Vector3f(5, 5, 0), 0xFFFF6666);
 
-        Matrix4f transformationMatrix = matrices.peek().getPositionMatrix();
-        var tessellator = Tessellator.getInstance();
-
-        BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.TRIANGLE_FAN, VertexFormats.POSITION_COLOR);
-
-        buffer.vertex(transformationMatrix, 0, -5, 0).color(0xFFAA0000);
-        buffer.vertex(transformationMatrix, -5, 5, 0).color(0xFFFF6666);
-        buffer.vertex(transformationMatrix, 0, 3, 0).color(0xFFAA0000);
-        buffer.vertex(transformationMatrix, 5, 5, 0).color(0xFFFF6666);
-
-        BufferRenderer.drawWithGlobalProgram(buffer.end());
-
-        matrices.pop();
+        triangleFanRenderingHelper.render(BufferRenderer::drawWithGlobalProgram);
     }
 
     private void renderMap(@NotNull DrawContext context) {

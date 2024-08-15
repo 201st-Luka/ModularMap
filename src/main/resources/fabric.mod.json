@@ -18,9 +18,6 @@
     "fabric-datagen": [
       "luka.modularmap.datagen.ModularMapDataGenerator"
     ],
-    "main": [
-      "luka.modularmap.ModularMap"
-    ],
     "client": [
       "luka.modularmap.ModularMapClient"
     ],
@@ -29,7 +26,6 @@
     ]
   },
   "mixins": [
-    "modularmap.mixins.json",
     {
       "config": "modularmap.client.mixins.json",
       "environment": "client"

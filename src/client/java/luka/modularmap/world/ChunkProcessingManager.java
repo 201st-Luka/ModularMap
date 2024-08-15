@@ -21,7 +21,7 @@ package luka.modularmap.world;
 
 import luka.modularmap.ModularMapClient;
 import luka.modularmap.map.MapChunk;
-import luka.modularmap.map.WorldMap;
+import luka.modularmap.map.MapController;
 import net.minecraft.world.chunk.Chunk;
 import org.jetbrains.annotations.NotNull;
 
@@ -37,16 +37,20 @@ public class ChunkProcessingManager {
         _executor = Executors.newFixedThreadPool(threadCount);
     }
 
-    public void addChunkToQueue(@NotNull Chunk chunk, @NotNull WorldMap worldMap) {
+    public void addChunkToQueue(@NotNull Chunk chunk, @NotNull MapController mapController) {
         _executor.submit(() -> {
             try {
                 var mapChunk = new MapChunk(chunk);
 
-                worldMap.setChunk(mapChunk);
+                mapController.setChunk(mapChunk);
 
             } catch (Exception e) {
                 ModularMapClient.LOGGER.error("Error processing chunk: {}", chunk.getPos(), e);
             }
         });
+    }
+
+    public void end() {
+        _executor.shutdown();
     }
 }

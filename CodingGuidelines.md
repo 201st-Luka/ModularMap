@@ -90,10 +90,11 @@
 - Do not use static methods, use instance methods instead.
 - Use `@Override` annotation when overriding a parent method.
 - Apply defensive programming.
+- Apply the DRY (Don't Repeated Yourself) principle.
 
 ### Variables
 
-- Apply the NRY (Not Repeated Yourself) principle.
+- Apply the DRY (Don't Repeated Yourself) principle.
 
 ### Annotations
 
@@ -122,5 +123,5 @@
 ## Applied principles
 
 - Single responsibility principle
-- Not repeated yourself principle
+- Don't repeated yourself principle
 - Defensive programming
