@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package luka.modularmap.renderer;
+package luka.modularmap.map.renderer;
 
 import luka.modularmap.map.MapChunk;
 import luka.modularmap.map.MapController;
