@@ -26,32 +26,33 @@ import net.minecraft.world.chunk.Chunk;
 
 public class MapChunk {
     public static final byte CHUNK_SIZE = 16;
-    private final CompressedBlock[][] blocks = new CompressedBlock[CHUNK_SIZE][CHUNK_SIZE];
-    private final ChunkPos chunkPos;
+    private final CompressedBlock[][] _blocks = new CompressedBlock[CHUNK_SIZE][CHUNK_SIZE];
+    private final ChunkPos _chunkPos;
 
     public MapChunk(Chunk chunk) {
-        chunkPos = chunk.getPos();
+        _chunkPos = chunk.getPos();
 
         for (int x = 0; x < 16; x++)
             for (int z = 0; z < 16; z++)
                 for (int y = chunk.getTopY() - 1; y >= chunk.getBottomY(); y--) {
-                    BlockPos pos = new BlockPos(chunkPos.x * 16 + x, y, chunkPos.z * 16 + z);
+                    int posX = _chunkPos.x * 16 + x,
+                            posZ = _chunkPos.z * 16 + z;
 
-                    BlockState blockState = chunk.getBlockState(pos);
+                    BlockState blockState = chunk.getBlockState(new BlockPos(posX, y, posZ));
 
-                    if (!blockState.isAir() && (blockState.isOpaque() || blockState.getFluidState().getFluid() != null)) {
-                        blocks[x][z] = new CompressedBlock(blockState.getBlock(), pos);
+                    if (!blockState.isAir()) {
+                        _blocks[x][z] = new CompressedBlock(blockState.getBlock(), posX, y, posZ);
                         break;
                     }
                 }
     }
 
     public ChunkPos getChunkPos() {
-        return chunkPos;
+        return _chunkPos;
     }
 
     public CompressedBlock[][] getBlocks() {
-        return blocks;
+        return _blocks;
     }
 }
 

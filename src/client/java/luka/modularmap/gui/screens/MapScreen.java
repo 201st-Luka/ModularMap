@@ -18,13 +18,12 @@
 
 package luka.modularmap.gui.screens;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import luka.modularmap.ModularMapClient;
 import luka.modularmap.config.ConfigManager;
 import luka.modularmap.event.KeyInputHandler;
-import luka.modularmap.map.MapChunk;
-import luka.modularmap.map.WorldMap;
-import luka.modularmap.world.CompressedBlock;
+import luka.modularmap.map.MapController;
+import luka.modularmap.renderer.AbstractMapRenderer;
+import luka.modularmap.renderer.SurfaceRenderer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
@@ -34,42 +33,39 @@ import net.minecraft.client.gui.screen.ButtonTextures;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TexturedButtonWidget;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.render.*;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RotationAxis;
-import org.joml.Matrix4f;
-
-import java.util.Vector;
+import org.jetbrains.annotations.NotNull;
+import org.joml.Vector2d;
+import org.joml.Vector2i;
 
 @Environment(EnvType.CLIENT)
-public class MapScreen extends BaseScreen {
-    private static final int GRID_COLOR = 0x40000000;
-    private final WorldMap worldMap;
-    private final ClientPlayerEntity player;
-    private int zoom = 0;
-    private double scale = 1 / Math.pow(2, (double) zoom / 4);
-    private double shiftX, shiftZ;
-    private boolean isInitialized = false;
-    private double scrollBuffer = 0;
+public class MapScreen extends AbstractScreen {
+    private final MapController _mapController;
+    private final AbstractMapRenderer _mapRenderer;
+    private final ClientPlayerEntity _player;
+    private int _zoom = 0;
+    private double _scale = 1 / Math.pow(2, (double) _zoom / 4);
+    private double _shiftX, _shiftZ;
+    private boolean _isInitialized = false;
+    private double _scrollBuffer = 0;
 
     public MapScreen() {
         super("Map Screen");
 
-        player = MinecraftClient.getInstance().player;
+        _player = MinecraftClient.getInstance().player;
 
-        worldMap = modularMapClient.modularMap$getWorldMap();
+        _mapController = _modularMapClient.modularMap$getMapController();
+        _mapRenderer = new SurfaceRenderer(_mapController);
     }
 
     @Override
     protected void init() {
-        if (!isInitialized) {
-            isInitialized = true;
+        if (!_isInitialized) {
+            _isInitialized = true;
 
-            shiftX = (double) (width - FRAME_SPACING * 2 - BUTTON_SIZE) / 2;
-            shiftZ = (double) height / 2;
+            _shiftX = (double) (width - FRAME_SPACING * 2 - BUTTON_SIZE) / 2;
+            _shiftZ = (double) height / 2;
         }
 
         ButtonWidget configButton = new TexturedButtonWidget(
@@ -102,6 +98,14 @@ public class MapScreen extends BaseScreen {
                         button -> client.setScreen(null),
                         Text.literal("Close")
                 );
+        //todo: add zoom slider
+//        SliderWidget zoomSlider = new SliderWidget(
+//                FRAME_SPACING, height - FRAME_SPACING - BUTTON_SIZE,
+//                width - FRAME_SPACING * 2 - BUTTON_SIZE, BUTTON_SIZE,
+//                Text.literal("Zoom: "), Text.literal(""),
+//                0, 32, zoom, false, true,
+//                slider -> zoom(slider, (double) width / 2, (double) height / 2)
+//        );
 
         addDrawableChild(configButton);
         addDrawableChild(waypointButton);
@@ -110,194 +114,55 @@ public class MapScreen extends BaseScreen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (KeyInputHandler.openMapKey.matchesKey(keyCode, scanCode)) {
-            player.closeHandledScreen();
+        assert client != null;
+
+        if (KeyInputHandler.openMapKeyBinding.matchesKey(keyCode, scanCode)) {
+            _player.closeHandledScreen();
             return true;
-        } else if (KeyInputHandler.openWaypointsKey.matchesKey(keyCode, scanCode)) {
+        } else if (KeyInputHandler.openWaypointsKeyBinding.matchesKey(keyCode, scanCode)) {
             client.setScreen(new WaypointScreen(this));
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
-    private void drawChunk(BufferBuilder buffer, Matrix4f transformationMatrix, MapChunk chunk) {
-        if (chunk != null) {
-            for (CompressedBlock[] blocks : chunk.getBlocks()) {
-                for (CompressedBlock block : blocks) {
-                    BlockPos blockPos = block.getBlockPos();
-                    int blockColor = block.getColor();
-
-                    buffer.vertex(transformationMatrix, blockPos.getX(), blockPos.getZ(), 0).color(blockColor);
-                    buffer.vertex(transformationMatrix, blockPos.getX(), blockPos.getZ() + 1, 0).color(blockColor);
-                    buffer.vertex(transformationMatrix, blockPos.getX() + 1, blockPos.getZ() + 1, 0).color(blockColor);
-                    buffer.vertex(transformationMatrix, blockPos.getX() + 1, blockPos.getZ(), 0).color(blockColor);
-                }
-            }
-        }
-    }
-
-    private void renderChunks(DrawContext context) {
-        MatrixStack matrices = context.getMatrices();
-        matrices.push();
-        matrices.translate(shiftX - player.getBlockX() * scale, shiftZ - player.getBlockZ() * scale, 0);
-        matrices.scale((float) scale, (float) scale, 1);
-
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-
-        Matrix4f transformationMatrix = matrices.peek().getPositionMatrix();
-        Tessellator tessellator = Tessellator.getInstance();
-
-        BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
-
-        // only render chunks that are visible on the map screen
-        int chunkStartX = (int) xToBlockX(0) / 16 - 1,
-                chunkStartZ = (int) zToBlockZ(0) / 16 - 1,
-                chunkEndX = (int) xToBlockX(width) / 16 + 1,
-                chunkEndZ = (int) zToBlockZ(height) / 16 + 1;
-        Vector<MapChunk> chunks = worldMap.getChunks(chunkStartX, chunkStartZ, chunkEndX, chunkEndZ);
-
-        for (MapChunk chunk : chunks)
-            drawChunk(buffer, transformationMatrix, chunk);
-
-        try {
-            BufferRenderer.drawWithGlobalProgram(buffer.end());
-        } catch (IllegalStateException ignored) {
-            // buffer is empty, nothing to render/draw
-        }
-
-        matrices.pop();
-    }
-
-    private void renderVerticalGridLines(DrawContext context) {
-        int chunkStartX = (int) xToBlockX(0) / 16,
-                chunkEndX = (int) xToBlockX(width) / 16 + 2;
-
-        MatrixStack matrices = context.getMatrices();
-        matrices.push();
-        matrices.translate(shiftX, 0, 0);
-        matrices.scale((float) scale, 1, 0);
-
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-
-        Matrix4f transformationMatrix = matrices.peek().getPositionMatrix();
-        Tessellator tessellator = Tessellator.getInstance();
-
-        BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
-
-        // vertical lines
-        for (int x = chunkStartX; x <= chunkEndX; x++) {
-            buffer.vertex(transformationMatrix, x * 16, 0, 0)
-                    .color(GRID_COLOR);
-            buffer.vertex(transformationMatrix, x * 16, height + 1, 0)
-                    .color(GRID_COLOR);
-        }
-
-        BufferRenderer.drawWithGlobalProgram(buffer.end());
-
-        matrices.pop();
-    }
-
-    private void renderHorizontalGridLines(DrawContext context) {
-        int chunkStartZ = (int) zToBlockZ(0) / 16 - 1,
-                chunkEndZ = (int) zToBlockZ(height) / 16;
-
-        MatrixStack matrices = context.getMatrices();
-        matrices.push();
-        matrices.translate(0, shiftZ, 0);
-        matrices.scale(1, (float) scale, 0);
-
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-
-        Matrix4f transformationMatrix = matrices.peek().getPositionMatrix();
-        Tessellator tessellator = Tessellator.getInstance();
-
-        BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
-
-        // vertical lines
-        for (int z = chunkStartZ; z <= chunkEndZ; z++) {
-            buffer.vertex(transformationMatrix, 0, z * 16, 0)
-                    .color(GRID_COLOR);
-            buffer.vertex(transformationMatrix, width, z * 16, 0)
-                    .color(GRID_COLOR);
-        }
-
-        BufferRenderer.drawWithGlobalProgram(buffer.end());
-
-        matrices.pop();
-    }
-
-    private void renderGrid(DrawContext context) {
-        if (scale >= 0.5) {
-            renderVerticalGridLines(context);
-            renderHorizontalGridLines(context);
-        }
-    }
-
-    private void renderPlayer(DrawContext context) {
-        MatrixStack matrices = context.getMatrices();
-        matrices.push();
-        matrices.translate(shiftX, shiftZ, 0);
-        matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(player.getYaw() + 180));
-
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-
-        Matrix4f transformationMatrix = matrices.peek().getPositionMatrix();
-        Tessellator tessellator = Tessellator.getInstance();
-
-        BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.TRIANGLE_FAN, VertexFormats.POSITION_COLOR);
-
-        buffer.vertex(transformationMatrix, 0, -5, 0).color(0xFFAA0000);
-        buffer.vertex(transformationMatrix, -5, 5, 0).color(0xFFFF6666);
-        buffer.vertex(transformationMatrix, 0, 3, 0).color(0xFFAA0000);
-        buffer.vertex(transformationMatrix, 5, 5, 0).color(0xFFFF6666);
-
-        BufferRenderer.drawWithGlobalProgram(buffer.end());
-
-        matrices.pop();
-    }
-
-    private void renderMap(DrawContext context) {
-        renderChunks(context);
-
-        renderGrid(context);
-
-        renderPlayer(context);
-    }
-
     private double xToBlockX(double x) {
-        return (x - shiftX) / scale + player.getBlockX();
+        return (x - _shiftX) / _scale + _player.getBlockX();
     }
 
     private double zToBlockZ(double z) {
-        return (z - shiftZ) / scale + player.getBlockZ();
+        return (z - _shiftZ) / _scale + _player.getBlockZ();
     }
 
     private void zoom(int amount, double zoomCenterX, double zoomCenterZ) {
-        if (-16 < zoom - amount && zoom - amount < 16) {
+        if (-16 < _zoom - amount && _zoom - amount < 16) {
             double blockXBeforeZoom = xToBlockX(zoomCenterX);
             double blockZBeforeZoom = zToBlockZ(zoomCenterZ);
 
-            zoom -= amount;
-            scale = 1 / Math.pow(2, (double) zoom / 4);
+            _zoom -= amount;
+            _scale = 1 / Math.pow(2, (double) _zoom / 4);
 
             double blockXAfterZoom = xToBlockX(zoomCenterX);
             double blockZAfterZoom = zToBlockZ(zoomCenterZ);
 
-            shiftX += (blockXAfterZoom - blockXBeforeZoom) * scale;
-            shiftZ += (blockZAfterZoom - blockZBeforeZoom) * scale;
+            _shiftX += (blockXAfterZoom - blockXBeforeZoom) * _scale;
+            _shiftZ += (blockZAfterZoom - blockZBeforeZoom) * _scale;
         }
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void render(@NotNull DrawContext context, int mouseX, int mouseY, float delta) {
         renderBackground(context, mouseX, mouseY, delta);
         context.fill(0, 0, width, height, ConfigManager.getConfig().backgroundColor.getValue());
 
-        renderMap(context);
+        _mapRenderer.render(
+                context, _player,
+                new Vector2d(_shiftX, _shiftZ),
+                new Vector2i((int) xToBlockX(0) / 16, (int) zToBlockZ(0) / 16),
+                new Vector2i((int) xToBlockX(width) / 16, (int) zToBlockZ(height) / 16),
+                _scale,
+                width, height
+        );
 
         context.fill(width - FRAME_SPACING * 2 - BUTTON_SIZE, 0, width, height, 0x80000000);
 
@@ -306,17 +171,16 @@ public class MapScreen extends BaseScreen {
             drawable.render(context, mouseX, mouseY, delta);
     }
 
-    @SuppressWarnings("unused")
-    protected void onDrag(double mouseX, double mouseY, double deltaX, double deltaY) {
-        shiftX += deltaX;
-        shiftZ += deltaY;
+    protected void onDrag(double deltaX, double deltaY) {
+        _shiftX += deltaX;
+        _shiftZ += deltaY;
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
-        scrollBuffer += verticalAmount;
-        int amount = (int) Math.round(scrollBuffer);
-        scrollBuffer -= amount;
+        _scrollBuffer += verticalAmount;
+        int amount = (int) Math.round(_scrollBuffer);
+        _scrollBuffer -= amount;
 
         zoom(amount, mouseX, mouseY);
 
@@ -326,7 +190,7 @@ public class MapScreen extends BaseScreen {
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
         if (isLeftClickButton(button)) {
-            onDrag(mouseX, mouseY, deltaX, deltaY);
+            onDrag(deltaX, deltaY);
             return true;
         } else {
             return false;

@@ -21,6 +21,7 @@ package luka.modularmap.config;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import luka.modularmap.ModularMapClient;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.FileReader;
@@ -35,22 +36,22 @@ public class ConfigManager {
     private static final Gson GSON = new GsonBuilder()
             .setPrettyPrinting()
             .create();
-    private static final File configFile = new File(MOD_CONFIG_PATH + "/" + CONFIG_FILE_NAME);
-    private static ModularMapConfig config;
+    private static final File CONFIG_FILE = new File(MOD_CONFIG_PATH + "/" + CONFIG_FILE_NAME);
+    private static ModularMapConfig _config;
 
     public static void loadConfig() {
-        ModularMapClient.LOGGER.debug("Loading config file: {} ...", configFile.getPath());
+        ModularMapClient.LOGGER.debug("Loading config file: {} ...", CONFIG_FILE.getPath());
 
-        if (!configFile.exists()) {
-            config = new ModularMapConfig();
+        if (!CONFIG_FILE.exists()) {
+            _config = new ModularMapConfig();
             saveConfig();
 
         } else {
-            try (FileReader reader = new FileReader(configFile)) {
-                config = GSON.fromJson(reader, ModularMapConfig.class);
+            try (FileReader reader = new FileReader(CONFIG_FILE)) {
+                _config = GSON.fromJson(reader, ModularMapConfig.class);
 
             } catch (IOException e) {
-                ModularMapClient.LOGGER.error("Failed to load config file: {}", configFile.getAbsolutePath(), e);
+                ModularMapClient.LOGGER.error("Failed to load config file: {}", CONFIG_FILE.getAbsolutePath(), e);
             }
         }
 
@@ -58,29 +59,29 @@ public class ConfigManager {
     }
 
     public static void saveConfig() {
-        ModularMapClient.LOGGER.debug("Saving config file: {} ...", configFile.getPath());
+        ModularMapClient.LOGGER.debug("Saving config file: {} ...", CONFIG_FILE.getPath());
 
         new File(MOD_CONFIG_PATH).mkdirs();
 
-        try (FileWriter writer = new FileWriter(configFile)) {
-            GSON.toJson(config, writer);
+        try (FileWriter writer = new FileWriter(CONFIG_FILE)) {
+            GSON.toJson(_config, writer);
 
         } catch (IOException e) {
-            ModularMapClient.LOGGER.error("Failed to save config file: {}", configFile.getAbsolutePath(), e);
+            ModularMapClient.LOGGER.error("Failed to save config file: {}", CONFIG_FILE.getAbsolutePath(), e);
         }
 
         ModularMapClient.LOGGER.info("Config saved.");
     }
 
     public static ModularMapConfig getConfig() {
-        return config;
+        return _config;
     }
 
-    public static void updateConfig(ModularMapConfig config) {
-        if (ConfigManager.config == config)
+    public static void updateConfig(@NotNull ModularMapConfig config) {
+        if (ConfigManager._config == config)
             ModularMapClient.LOGGER.warn("Config is the same object as the current config.");
 
-        ConfigManager.config = config;
+        ConfigManager._config = config;
         saveConfig();
     }
 }

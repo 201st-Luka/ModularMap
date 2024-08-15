@@ -1,11 +1,11 @@
 {
-	"required": true,
-	"package": "luka.modularmap.mixin.client",
-	"compatibilityLevel": "JAVA_21",
-	"client": [
-		"ModularMapClientMixin"
-	],
-	"injectors": {
-		"defaultRequire": 1
-	}
+  "required": true,
+  "package": "luka.modularmap.mixin.client",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "AbstractModularMapClientMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
 }

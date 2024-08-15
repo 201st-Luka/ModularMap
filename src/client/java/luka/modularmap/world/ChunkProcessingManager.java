@@ -21,28 +21,36 @@ package luka.modularmap.world;
 
 import luka.modularmap.ModularMapClient;
 import luka.modularmap.map.MapChunk;
-import luka.modularmap.map.WorldMap;
+import luka.modularmap.map.MapController;
 import net.minecraft.world.chunk.Chunk;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ChunkProcessingManager {
-    private final ExecutorService executor;
+    private final ExecutorService _executor;
 
     public ChunkProcessingManager(int threadCount) {
-        this.executor = Executors.newFixedThreadPool(threadCount);
+        assert threadCount > 0;
+
+        _executor = Executors.newFixedThreadPool(threadCount);
     }
 
-    public void addChunkToQueue(Chunk chunk, WorldMap worldMap) {
-        executor.submit(() -> {
+    public void addChunkToQueue(@NotNull Chunk chunk, @NotNull MapController mapController) {
+        _executor.submit(() -> {
             try {
-                MapChunk mapChunk = new MapChunk(chunk);
+                var mapChunk = new MapChunk(chunk);
 
-                worldMap.setChunk(mapChunk);
+                mapController.setChunk(mapChunk);
+
             } catch (Exception e) {
                 ModularMapClient.LOGGER.error("Error processing chunk: {}", chunk.getPos(), e);
             }
         });
+    }
+
+    public void end() {
+        _executor.shutdown();
     }
 }

@@ -24,23 +24,37 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 
 public class CompressedBlock {
-    private final BlockPos blockPos;
-    private final Identifier blockId;
+    private final Identifier _blockId;
+    private final int _x, _y, _z;
 
-    public CompressedBlock(Block block, BlockPos pos) {
-        blockPos = pos;
-        blockId = Registries.BLOCK.getId(block);
+    public CompressedBlock(Block block, int posX, int posY, int posZ) {
+        _x = posX;
+        _y = posY;
+        _z = posZ;
+        _blockId = Registries.BLOCK.getId(block);
     }
 
     public BlockPos getBlockPos() {
-        return blockPos;
+        return new BlockPos(_x, _y, _z);
+    }
+
+    public int getBlockX() {
+        return _x;
+    }
+
+    public int getBlockY() {
+        return _y;
+    }
+
+    public int getBlockZ() {
+        return _z;
     }
 
     public Identifier getBlockId() {
-        return blockId;
+        return _blockId;
     }
 
     public int getColor() {
-        return Registries.BLOCK.get(blockId).getDefaultMapColor().color | 0xFF000000;
+        return Registries.BLOCK.get(_blockId).getDefaultMapColor().color | 0xFF000000;
     }
 }

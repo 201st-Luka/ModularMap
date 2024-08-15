@@ -31,28 +31,27 @@ public class KeyInputHandler {
     public static final String KEY_OPEN_MAP = "key.category.modularmap.open_map";
     public static final String KEY_OPEN_WAYPOINTS = "key.category.modularmap.open_waypoints";
 
-    public static KeyBinding openMapKey;
-    public static KeyBinding openWaypointsKey;
+    public static KeyBinding openMapKeyBinding;
+    public static KeyBinding openWaypointsKeyBinding;
 
     public static void registerKeyInputs() {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (openMapKey.wasPressed()) {
+            if (openMapKeyBinding.wasPressed())
                 client.setScreen(new MapScreen());
-            }
-            if (openWaypointsKey.wasPressed()) {
+
+            if (openWaypointsKeyBinding.wasPressed())
                 client.setScreen(new WaypointScreen());
-            }
         });
     }
 
     public static void register() {
-        openMapKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        openMapKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 KEY_OPEN_MAP,
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_M,
                 KEY_CATEGORY
         ));
-        openWaypointsKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        openWaypointsKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 KEY_OPEN_WAYPOINTS,
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_N,
