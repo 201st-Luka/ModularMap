@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package luka.modularmap.rendering.components;
+package luka.modularmap.rendering;
 
 import com.google.common.base.Supplier;
 import com.mojang.blaze3d.systems.RenderSystem;

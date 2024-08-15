@@ -21,12 +21,9 @@ package luka.modularmap.gui.screens;
 import luka.modularmap.ModularMapClient;
 import luka.modularmap.config.ConfigManager;
 import luka.modularmap.event.KeyInputHandler;
-import luka.modularmap.map.MapChunk;
 import luka.modularmap.map.MapController;
-import luka.modularmap.rendering.components.DebugLineRenderingHelper;
-import luka.modularmap.rendering.components.PixelRenderingHelper;
-import luka.modularmap.rendering.components.TriangleFanRenderingHelper;
-import luka.modularmap.world.CompressedBlock;
+import luka.modularmap.renderer.AbstractMapRenderer;
+import luka.modularmap.renderer.SurfaceRenderer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
@@ -36,23 +33,16 @@ import net.minecraft.client.gui.screen.ButtonTextures;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TexturedButtonWidget;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.render.BufferRenderer;
-import net.minecraft.client.render.GameRenderer;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.RotationAxis;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.joml.Vector3d;
-import org.joml.Vector3f;
-import org.joml.Vector4f;
-
-import java.util.Vector;
+import org.joml.Vector2d;
+import org.joml.Vector2i;
 
 @Environment(EnvType.CLIENT)
-public class MapScreen extends BaseScreen {
-    private static final int GRID_COLOR = 0x40000000;
+public class MapScreen extends AbstractScreen {
     private final MapController _mapController;
+    private final AbstractMapRenderer _mapRenderer;
     private final ClientPlayerEntity _player;
     private int _zoom = 0;
     private double _scale = 1 / Math.pow(2, (double) _zoom / 4);
@@ -66,6 +56,7 @@ public class MapScreen extends BaseScreen {
         _player = MinecraftClient.getInstance().player;
 
         _mapController = _modularMapClient.modularMap$getMapController();
+        _mapRenderer = new SurfaceRenderer(_mapController);
     }
 
     @Override
@@ -135,110 +126,6 @@ public class MapScreen extends BaseScreen {
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
-    private void drawChunk(@NotNull PixelRenderingHelper renderer,
-                           @Nullable MapChunk chunk) {
-        if (chunk != null)
-            for (CompressedBlock[] blocks : chunk.getBlocks())
-                for (CompressedBlock block : blocks)
-                    renderer.drawPixel(block.getBlockX(), block.getBlockZ(), block.getColor());
-
-    }
-
-    private void renderChunks(@NotNull DrawContext context) {
-        var pixelRenderingHelper = new PixelRenderingHelper(
-                context,
-                new Vector3d(_shiftX - _player.getBlockX() * _scale, _shiftZ - _player.getBlockZ() * _scale, 0),
-                new Vector3f((float) _scale, (float) _scale, 1),
-                GameRenderer::getPositionColorProgram,
-                new Vector4f(1.0F, 1.0F, 1.0F, 1.0F)
-        );
-
-        // only render chunks that are visible on the map screen
-        int chunkStartX = (int) xToBlockX(0) / 16 - 1,
-                chunkStartZ = (int) zToBlockZ(0) / 16 - 1,
-                chunkEndX = (int) xToBlockX(width) / 16 + 1,
-                chunkEndZ = (int) zToBlockZ(height) / 16 + 1;
-        Vector<MapChunk> chunks = _mapController.getChunks(chunkStartX, chunkStartZ, chunkEndX, chunkEndZ);
-
-        for (MapChunk chunk : chunks)
-            drawChunk(pixelRenderingHelper, chunk);
-
-        pixelRenderingHelper.render(BufferRenderer::drawWithGlobalProgram);
-    }
-
-    private void renderVerticalGridLines(@NotNull DrawContext context) {
-        var debugLineRenderingHelper = new DebugLineRenderingHelper(
-                context,
-                new Vector3d(_shiftX, 0, 0),
-                new Vector3f((float) _scale, 1, 1),
-                GameRenderer::getPositionColorProgram,
-                new Vector4f(1.0F, 1.0F, 1.0F, 1.0F)
-        );
-
-        int chunkStartX = (int) xToBlockX(0) / 16,
-                chunkEndX = (int) xToBlockX(width) / 16 + 2;
-
-        // vertical lines
-        for (int x = chunkStartX; x <= chunkEndX; x++)
-            debugLineRenderingHelper.drawLine(x * 16 - _player.getBlockX(), 0, x * 16 - _player.getBlockX(), height + 1, GRID_COLOR);
-
-
-        debugLineRenderingHelper.render(BufferRenderer::drawWithGlobalProgram);
-    }
-
-    private void renderHorizontalGridLines(@NotNull DrawContext context) {
-        var debugLineRenderingHelper = new DebugLineRenderingHelper(
-                context,
-                new Vector3d(0, _shiftZ, 0),
-                new Vector3f(1, (float) _scale, 1),
-                GameRenderer::getPositionColorProgram,
-                new Vector4f(1.0F, 1.0F, 1.0F, 1.0F)
-        );
-
-        int chunkStartZ = (int) zToBlockZ(0) / 16 - 1,
-                chunkEndZ = (int) zToBlockZ(height) / 16 + 1;
-
-        // vertical lines
-        for (int z = chunkStartZ; z <= chunkEndZ; z++)
-            debugLineRenderingHelper.drawLine(0, z * 16 - _player.getBlockZ(), width, z * 16 - _player.getBlockZ(), GRID_COLOR);
-
-        debugLineRenderingHelper.render(BufferRenderer::drawWithGlobalProgram);
-    }
-
-    private void renderGrid(@NotNull DrawContext context) {
-        if (_scale >= 0.5) {
-            renderVerticalGridLines(context);
-            renderHorizontalGridLines(context);
-        }
-    }
-
-    private void renderPlayer(@NotNull DrawContext context) {
-        var triangleFanRenderingHelper = new TriangleFanRenderingHelper(
-                context,
-                new Vector3d(_shiftX, _shiftZ, 0),
-                RotationAxis.POSITIVE_Z.rotationDegrees(_player.getYaw() + 180),
-                GameRenderer::getPositionColorProgram,
-                new Vector4f(1.0F, 1.0F, 1.0F, 1.0F)
-        );
-
-        triangleFanRenderingHelper.drawFirstTriangleFan(
-                new Vector3f(0, -5, 0), 0xFFAA0000,
-                new Vector3f(-5, 5, 0), 0xFFFF6666,
-                new Vector3f(0, 3, 0), 0xFFAA0000
-        );
-        triangleFanRenderingHelper.drawTriangleFan(new Vector3f(5, 5, 0), 0xFFFF6666);
-
-        triangleFanRenderingHelper.render(BufferRenderer::drawWithGlobalProgram);
-    }
-
-    private void renderMap(@NotNull DrawContext context) {
-        renderChunks(context);
-
-        renderGrid(context);
-
-        renderPlayer(context);
-    }
-
     private double xToBlockX(double x) {
         return (x - _shiftX) / _scale + _player.getBlockX();
     }
@@ -268,7 +155,14 @@ public class MapScreen extends BaseScreen {
         renderBackground(context, mouseX, mouseY, delta);
         context.fill(0, 0, width, height, ConfigManager.getConfig().backgroundColor.getValue());
 
-        renderMap(context);
+        _mapRenderer.render(
+                context, _player,
+                new Vector2d(_shiftX, _shiftZ),
+                new Vector2i((int) xToBlockX(0) / 16, (int) zToBlockZ(0) / 16),
+                new Vector2i((int) xToBlockX(width) / 16, (int) zToBlockZ(height) / 16),
+                _scale,
+                width, height
+        );
 
         context.fill(width - FRAME_SPACING * 2 - BUTTON_SIZE, 0, width, height, 0x80000000);
 

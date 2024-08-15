@@ -24,13 +24,18 @@ import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.screen.Screen;
 import org.jetbrains.annotations.NotNull;
 
-public class MenuScreen extends BaseScreen {
+public class MenuScreen extends AbstractScreen {
     public MenuScreen(String title, Screen parent) {
         super(title, parent);
     }
 
     public MenuScreen(String title) {
         this(title, null);
+    }
+
+    @Override
+    protected void init() {
+        // todo: add waypoints and waypoint menu
     }
 
     protected int calculateHeaderHeight() {

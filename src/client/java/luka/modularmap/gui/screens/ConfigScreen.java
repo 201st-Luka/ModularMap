@@ -53,8 +53,6 @@ public class ConfigScreen extends MenuScreen {
 
     @Override
     public void init() {
-        super.init();
-
         assert client != null;
 
         int row = 0,

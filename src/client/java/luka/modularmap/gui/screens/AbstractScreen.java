@@ -21,15 +21,17 @@ package luka.modularmap.gui.screens;
 import com.google.common.collect.Lists;
 import luka.modularmap.util.IModularMapClient;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class BaseScreen extends Screen {
+public abstract class AbstractScreen extends Screen {
     protected final Screen _parent;
     protected final List<Drawable> drawables = Lists.newArrayList();
     protected IModularMapClient _modularMapClient = (IModularMapClient) MinecraftClient.getInstance();
@@ -40,12 +42,12 @@ public class BaseScreen extends Screen {
             TEXT_WIDTH = 120,
             TEXT_HEIGHT = 24;
 
-    public BaseScreen(String title, Screen parent) {
+    public AbstractScreen(String title, Screen parent) {
         super(Text.literal(title));
         _parent = parent;
     }
 
-    public BaseScreen(String title) {
+    public AbstractScreen(String title) {
         this(title, null);
     }
 
@@ -62,6 +64,9 @@ public class BaseScreen extends Screen {
     }
 
     @Override
+    protected abstract void init();
+
+    @Override
     protected <T extends Element & Drawable & Selectable> T addDrawableChild(T drawableElement) {
         drawables.add(drawableElement);
         return addSelectableChild(drawableElement);
@@ -72,6 +77,9 @@ public class BaseScreen extends Screen {
         drawables.add(drawable);
         return drawable;
     }
+
+    @Override
+    public abstract void render(@NotNull DrawContext context, int mouseX, int mouseY, float delta);
 
     @Override
     public void close() {

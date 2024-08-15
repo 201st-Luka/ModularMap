@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package luka.modularmap.rendering.components;
+package luka.modularmap.rendering;
 
 import com.google.common.base.Supplier;
 import net.minecraft.client.gl.ShaderProgram;
@@ -28,26 +28,23 @@ import org.joml.Vector3d;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-public class PixelRenderingHelper extends AbstractRenderingHelper {
+public class DebugLineRenderingHelper extends AbstractRenderingHelper {
 
-
-    public PixelRenderingHelper(DrawContext drawContext,
-                                @NotNull Vector3d translation,
-                                @NotNull Vector3f scale,
-                                @NotNull Supplier<ShaderProgram> shaderProgram,
-                                @NotNull Vector4f shaderColor) {
-        super(drawContext, translation, scale, null, VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR,
+    public DebugLineRenderingHelper(@NotNull DrawContext drawContext,
+                                    @NotNull Vector3d translation,
+                                    @NotNull Vector3f scale,
+                                    @NotNull Supplier<ShaderProgram> shaderProgram,
+                                    @NotNull Vector4f shaderColor) {
+        super(drawContext, translation, scale, null, VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR,
                 shaderProgram, shaderColor);
     }
 
-    public void drawPixel(float posX, float posY, float posZ, int color) {
-        _bufferBuilder.vertex(_matrixStackPeek, posX, posY, posZ).color(color);
-        _bufferBuilder.vertex(_matrixStackPeek, posX, posY + 1, posZ).color(color);
-        _bufferBuilder.vertex(_matrixStackPeek, posX + 1, posY + 1, posZ).color(color);
-        _bufferBuilder.vertex(_matrixStackPeek, posX + 1, posY, posZ).color(color);
+    public void drawLine(float startX, float startY, float startZ, float endX, float endY, float endZ, int color) {
+        _bufferBuilder.vertex(_matrixStackPeek, startX, startY, startZ).color(color);
+        _bufferBuilder.vertex(_matrixStackPeek, endX, endY, endZ).color(color);
     }
 
-    public void drawPixel(float posX, float posY, int color) {
-        drawPixel(posX, posY, 0, color);
+    public void drawLine(float startX, float startY, float endX, float endY, int color) {
+        drawLine(startX, startY, 0, endX, endY, 0, color);
     }
 }
