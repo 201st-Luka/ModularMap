@@ -39,6 +39,8 @@ repositories {
         name = "Terraformers"
         url = "https://maven.terraformersmc.com/"
     }
+
+
 }
 
 loom {
@@ -50,7 +52,6 @@ loom {
             sourceSet sourceSets.client
         }
     }
-
 }
 
 fabricApi {
@@ -58,14 +59,18 @@ fabricApi {
 }
 
 dependencies {
-    // To change the versions see the gradle.properties file
+    // minecraft related dependencies
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-    // Fabric API. This is technically optional, but you probably want it anyway.
+    // mod related dependencies
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation("com.terraformersmc:modmenu:${project.modmenu_version}")
+
+    // other dependencies
+    // https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc
+    implementation group: 'org.xerial', name: 'sqlite-jdbc', version: '3.46.0.1'
 }
 
 processResources {
