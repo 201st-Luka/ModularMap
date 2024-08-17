@@ -16,22 +16,20 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package luka.modularmap.world;
+package luka.modularmap.map;
 
 
 import luka.modularmap.ModularMapClient;
-import luka.modularmap.map.MapChunk;
-import luka.modularmap.map.MapController;
 import net.minecraft.world.chunk.Chunk;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class ChunkProcessingManager {
+public class MapProcessor {
     private final ExecutorService _executor;
 
-    public ChunkProcessingManager(int threadCount) {
+    public MapProcessor(int threadCount) {
         assert threadCount > 0;
 
         _executor = Executors.newFixedThreadPool(threadCount);

@@ -19,7 +19,6 @@
 package luka.modularmap.map;
 
 import luka.modularmap.config.ConfigManager;
-import luka.modularmap.world.ChunkProcessingManager;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.Chunk;
 import org.jetbrains.annotations.NotNull;
@@ -30,14 +29,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class MapController {
     private final java.util.Map<ChunkPos, MapChunk> _chunkMap = new ConcurrentHashMap<>();
-    private final ChunkProcessingManager _chunkProcessingManager;
+    private final MapProcessor _mapProcessor;
 
     public MapController() {
-        _chunkProcessingManager = new ChunkProcessingManager(ConfigManager.getConfig().chunkProcessingThreads);
+        _mapProcessor = new MapProcessor(ConfigManager.getConfig().chunkProcessingThreads);
     }
 
     public void addChunk(@NotNull Chunk chunk) {
-        _chunkProcessingManager.addChunkToQueue(chunk, this);
+        _mapProcessor.addChunkToQueue(chunk, this);
     }
 
     public MapChunk getChunk(@NotNull ChunkPos pos) {
@@ -69,8 +68,8 @@ public class MapController {
     public Set<java.util.Map.Entry<ChunkPos, MapChunk>> getChunkEntries() {
         return _chunkMap.entrySet();
     }
-    
+
     public void end() {
-        _chunkProcessingManager.end();
+        _mapProcessor.end();
     }
 }
