@@ -26,6 +26,7 @@ import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 
@@ -38,7 +39,7 @@ public abstract class AbstractScreen extends Screen {
 
     public static final int FRAME_SPACING = 6,
             PADDING = 6,
-            BUTTON_SIZE = 24,
+            BUTTON_SIZE = ButtonWidget.DEFAULT_HEIGHT,
             TEXT_WIDTH = 120,
             TEXT_HEIGHT = 24;
 

@@ -18,8 +18,10 @@
 
 package luka.modularmap.map.renderer;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import luka.modularmap.map.MapController;
 import luka.modularmap.rendering.DebugLineRenderingHelper;
+import luka.modularmap.rendering.QuadRenderingHelper;
 import luka.modularmap.rendering.TriangleFanRenderingHelper;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -60,8 +62,11 @@ public abstract class AbstractMapRenderer {
 
         // vertical lines
         for (int x = chunkStart.x; x <= chunkEnd.x; x++)
-            debugLineRenderingHelper.drawLine(x * 16 - playerPos.getX(), 0, x * 16 - playerPos.getX(), screenHeight + 1,
-                    GRID_COLOR);
+            debugLineRenderingHelper.drawLine(
+                    x * 16 - playerPos.getX(), 0,
+                    x * 16 - playerPos.getX(), screenHeight + 1,
+                    GRID_COLOR
+            );
 
 
         debugLineRenderingHelper.render(BufferRenderer::drawWithGlobalProgram);
@@ -87,6 +92,33 @@ public abstract class AbstractMapRenderer {
                     GRID_COLOR);
 
         debugLineRenderingHelper.render(BufferRenderer::drawWithGlobalProgram);
+    }
+
+    protected void renderHoveredChunk(@NotNull final DrawContext context,
+                                      @NotNull final Vector2d shift,
+                                      @NotNull final Vector2i hoveredChunk,
+                                      @NotNull final BlockPos playerPos,
+                                      final double scale) {
+        QuadRenderingHelper helper = new QuadRenderingHelper(
+                context,
+                new Vector3d(shift.x + (hoveredChunk.x * 16 + playerPos.getX() % 16) * scale,
+                        shift.y + (hoveredChunk.y * 16 + playerPos.getZ() % 16) * scale,
+                        0),
+                new Vector3f((float) scale, (float) scale, 1),
+                GameRenderer::getPositionColorProgram,
+                new Vector4f(1.0F, 1.0F, 1.0F, 0.5F)
+        );
+
+        RenderSystem.enableBlend();
+
+        helper.drawQuad(
+                hoveredChunk.x / 16, hoveredChunk.y / 16, 0,
+                hoveredChunk.x / 16 + 16, hoveredChunk.y / 16 + 16, 0xFFFFFFFF
+        );
+
+        helper.render(BufferRenderer::drawWithGlobalProgram);
+
+        RenderSystem.disableBlend();
     }
 
     protected void renderGrid(@NotNull final DrawContext context,
@@ -125,14 +157,20 @@ public abstract class AbstractMapRenderer {
     public void render(@NotNull final DrawContext context,
                        @NotNull final ClientPlayerEntity player,
                        @NotNull final Vector2d shift,
-                       @NotNull final Vector2i chunkStart, Vector2i chunkEnd,
+                       @NotNull final Vector2i chunkStart,
+                       @NotNull final Vector2i chunkEnd,
+                       @NotNull final Vector2i hoveredChunk,
                        final double scale,
-                       final int screenWidth, final int screenHeight) {
+                       final int screenWidth, final int screenHeight,
+                       final boolean renderGrid) {
         final var playerBlockPos = player.getBlockPos();
 
         renderChunks(context, shift, playerBlockPos, scale, chunkStart, chunkEnd);
 
-        renderGrid(context, shift, scale, chunkStart, chunkEnd, playerBlockPos, screenWidth, screenHeight);
+        renderHoveredChunk(context, shift, hoveredChunk, playerBlockPos, scale);
+
+        if (renderGrid)
+            renderGrid(context, shift, scale, chunkStart, chunkEnd, playerBlockPos, screenWidth, screenHeight);
 
         renderPlayer(context, shift, player);
     }

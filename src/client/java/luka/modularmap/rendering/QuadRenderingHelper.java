@@ -28,26 +28,33 @@ import org.joml.Vector3d;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-public class PixelRenderingHelper extends AbstractRenderingHelper {
+public class QuadRenderingHelper extends AbstractRenderingHelper {
 
 
-    public PixelRenderingHelper(DrawContext drawContext,
-                                @NotNull Vector3d translation,
-                                @NotNull Vector3f scale,
-                                @NotNull Supplier<ShaderProgram> shaderProgram,
-                                @NotNull Vector4f shaderColor) {
+    public QuadRenderingHelper(DrawContext drawContext,
+                               @NotNull Vector3d translation,
+                               @NotNull Vector3f scale,
+                               @NotNull Supplier<ShaderProgram> shaderProgram,
+                               @NotNull Vector4f shaderColor) {
         super(drawContext, translation, scale, null, VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR,
                 shaderProgram, shaderColor);
     }
 
-    public void drawPixel(float posX, float posY, float posZ, int color) {
+    public void drawQuad(float posX1, float posY1, float posZ, float posX2, float posY2, int color) {
+        _bufferBuilder.vertex(_matrixStackPeek, posX1, posY1, posZ).color(color);
+        _bufferBuilder.vertex(_matrixStackPeek, posX1, posY2, posZ).color(color);
+        _bufferBuilder.vertex(_matrixStackPeek, posX2, posY2, posZ).color(color);
+        _bufferBuilder.vertex(_matrixStackPeek, posX2, posY1, posZ).color(color);
+    }
+
+    public void drawQuad(float posX, float posY, float posZ, int color) {
         _bufferBuilder.vertex(_matrixStackPeek, posX, posY, posZ).color(color);
         _bufferBuilder.vertex(_matrixStackPeek, posX, posY + 1, posZ).color(color);
         _bufferBuilder.vertex(_matrixStackPeek, posX + 1, posY + 1, posZ).color(color);
         _bufferBuilder.vertex(_matrixStackPeek, posX + 1, posY, posZ).color(color);
     }
 
-    public void drawPixel(float posX, float posY, int color) {
-        drawPixel(posX, posY, 0, color);
+    public void drawQuad(float posX, float posY, int color) {
+        drawQuad(posX, posY, 0, color);
     }
 }

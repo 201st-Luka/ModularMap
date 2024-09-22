@@ -20,7 +20,7 @@ package luka.modularmap.map.renderer;
 
 import luka.modularmap.map.MapChunk;
 import luka.modularmap.map.MapController;
-import luka.modularmap.rendering.PixelRenderingHelper;
+import luka.modularmap.rendering.QuadRenderingHelper;
 import luka.modularmap.world.CompressedBlock;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.BufferRenderer;
@@ -37,12 +37,12 @@ public class SurfaceRenderer extends AbstractMapRenderer {
         super(map);
     }
 
-    private void drawChunk(@NotNull PixelRenderingHelper renderer,
+    private void drawChunk(@NotNull QuadRenderingHelper renderer,
                            @Nullable MapChunk chunk) {
         if (chunk != null)
             for (CompressedBlock[] blocks : chunk.getBlocks())
                 for (CompressedBlock block : blocks)
-                    renderer.drawPixel(block.getBlockX(), block.getBlockZ(), block.getColor());
+                    renderer.drawQuad(block.getBlockX(), block.getBlockZ(), block.getColor());
     }
 
     @Override
@@ -51,7 +51,7 @@ public class SurfaceRenderer extends AbstractMapRenderer {
                                 @NotNull final BlockPos playerPos,
                                 final double scale,
                                 @NotNull final Vector2i chunkStart, @NotNull final Vector2i chunkEnd) {
-        var pixelRenderingHelper = new PixelRenderingHelper(
+        var pixelRenderingHelper = new QuadRenderingHelper(
                 context,
                 new Vector3d(shift.x - playerPos.getX() * scale, shift.y - playerPos.getZ() * scale, 0),
                 new Vector3f((float) scale, (float) scale, 1),

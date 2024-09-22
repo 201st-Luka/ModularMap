@@ -21,6 +21,7 @@ package luka.modularmap.gui.screens;
 import luka.modularmap.ModularMapClient;
 import luka.modularmap.config.ConfigManager;
 import luka.modularmap.event.KeyInputHandler;
+import luka.modularmap.gui.widgets.BoolToggleButtonWidget;
 import luka.modularmap.map.MapController;
 import luka.modularmap.map.renderer.AbstractMapRenderer;
 import luka.modularmap.map.renderer.SurfaceRenderer;
@@ -49,6 +50,7 @@ public class MapScreen extends AbstractScreen {
     private double _shiftX, _shiftZ;
     private boolean _isInitialized = false;
     private double _scrollBuffer = 0;
+    private BoolToggleButtonWidget gridToggleButton;
 
     public MapScreen() {
         super("Map Screen");
@@ -61,10 +63,12 @@ public class MapScreen extends AbstractScreen {
 
     @Override
     protected void init() {
+        assert client != null;
+
         if (!_isInitialized) {
             _isInitialized = true;
 
-            _shiftX = (double) (width - FRAME_SPACING * 2 - BUTTON_SIZE) / 2;
+            _shiftX = (double) width / 2;
             _shiftZ = (double) height / 2;
         }
 
@@ -78,16 +82,6 @@ public class MapScreen extends AbstractScreen {
                 button -> client.setScreen(new ConfigScreen(this)),
                 Text.literal("Configuration")
         ),
-                waypointButton = new TexturedButtonWidget(
-                        width - FRAME_SPACING - BUTTON_SIZE, height - FRAME_SPACING - BUTTON_SIZE * 2 - PADDING,
-                        BUTTON_SIZE, BUTTON_SIZE,
-                        new ButtonTextures(
-                                Identifier.of(ModularMapClient.MOD_ID, "map/buttons/waypoints"),
-                                Identifier.of(ModularMapClient.MOD_ID, "map/buttons/waypoints_highlighted")
-                        ),
-                        button -> client.setScreen(new WaypointScreen(this)),
-                        Text.literal("Waypoints")
-                ),
                 closeButton = new TexturedButtonWidget(
                         width - FRAME_SPACING - BUTTON_SIZE, FRAME_SPACING,
                         BUTTON_SIZE, BUTTON_SIZE,
@@ -97,7 +91,28 @@ public class MapScreen extends AbstractScreen {
                         ),
                         button -> client.setScreen(null),
                         Text.literal("Close")
+                ),
+                waypointButton = new TexturedButtonWidget(
+                        width - FRAME_SPACING - BUTTON_SIZE, height - FRAME_SPACING - BUTTON_SIZE * 2 - PADDING,
+                        BUTTON_SIZE, BUTTON_SIZE,
+                        new ButtonTextures(
+                                Identifier.of(ModularMapClient.MOD_ID, "map/buttons/waypoints"),
+                                Identifier.of(ModularMapClient.MOD_ID, "map/buttons/waypoints_highlighted")
+                        ),
+                        button -> client.setScreen(new WaypointScreen(this)),
+                        Text.literal("Waypoints")
                 );
+        gridToggleButton = new BoolToggleButtonWidget(
+                width - FRAME_SPACING - BUTTON_SIZE, height - FRAME_SPACING - BUTTON_SIZE * 3 - PADDING * 2,
+                BUTTON_SIZE, BUTTON_SIZE,
+                new ButtonTextures(
+                        Identifier.of(ModularMapClient.MOD_ID, "map/buttons/grid"),
+                        Identifier.of(ModularMapClient.MOD_ID, "map/buttons/grid_highlighted")
+                ),
+                Text.literal("Toggle grid")
+        );
+
+
         //todo: add zoom slider
 //        SliderWidget zoomSlider = new SliderWidget(
 //                FRAME_SPACING, height - FRAME_SPACING - BUTTON_SIZE,
@@ -110,6 +125,7 @@ public class MapScreen extends AbstractScreen {
         addDrawableChild(configButton);
         addDrawableChild(waypointButton);
         addDrawableChild(closeButton);
+        addDrawableChild(gridToggleButton);
     }
 
     @Override
@@ -128,6 +144,14 @@ public class MapScreen extends AbstractScreen {
 
     private double xToBlockX(double x) {
         return (x - _shiftX) / _scale + _player.getBlockX();
+    }
+
+    private int xToChunkX(double x) {
+        return (int) xToBlockX(x) >> 4;
+    }
+
+    private int zToChunkZ(double z) {
+        return (int) zToBlockZ(z) >> 4;
     }
 
     private double zToBlockZ(double z) {
@@ -158,13 +182,24 @@ public class MapScreen extends AbstractScreen {
         _mapRenderer.render(
                 context, _player,
                 new Vector2d(_shiftX, _shiftZ),
-                new Vector2i((int) xToBlockX(0) / 16, (int) zToBlockZ(0) / 16),
-                new Vector2i((int) xToBlockX(width) / 16, (int) zToBlockZ(height) / 16),
+                new Vector2i(xToChunkX(0), zToChunkZ(0)),
+                new Vector2i(xToChunkX(width), zToChunkZ(height)),
+                new Vector2i(xToChunkX(mouseX) - 1, zToChunkZ(mouseY) - 1),
                 _scale,
-                width, height
+                width, height,
+                gridToggleButton.getState()
         );
 
-        context.fill(width - FRAME_SPACING * 2 - BUTTON_SIZE, 0, width, height, 0x80000000);
+        int blockX = (int) xToBlockX(mouseX),
+                blockZ = (int) zToBlockZ(mouseY);
+        context.drawText(
+                textRenderer,
+                Text.literal(blockX + " " + blockZ),
+                width / 2 - textRenderer.getWidth(String.valueOf(blockX)),
+                textRenderer.fontHeight / 2 + FRAME_SPACING,
+                0xFFFFFFFF,
+                true
+        );
 
         // widgets (buttons, ...)
         for (Drawable drawable : drawables)
@@ -196,4 +231,11 @@ public class MapScreen extends AbstractScreen {
             return false;
         }
     }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    
 }
