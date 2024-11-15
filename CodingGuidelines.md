@@ -14,7 +14,7 @@
 
 - Use `PascalCase` for class names.
 - Interface names should start with an `I` followed by a `PascalCase` class name.
-- Abstract class names should start with an `Abstract` followed by a `PascalCase` class name.
+- Abstract class names should start with an `A` followed by a `PascalCase` class name.
 
 #### Class field names
 

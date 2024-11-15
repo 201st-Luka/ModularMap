@@ -40,7 +40,7 @@ import org.joml.Vector2d;
 import org.joml.Vector2i;
 
 @Environment(EnvType.CLIENT)
-public class MapScreen extends AbstractScreen {
+public class MapScreen extends AScreen {
     private final MapController _mapController;
     private final AbstractMapRenderer _mapRenderer;
     private final ClientPlayerEntity _player;

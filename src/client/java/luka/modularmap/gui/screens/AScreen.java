@@ -31,7 +31,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public abstract class AbstractScreen extends Screen {
+public abstract class AScreen extends Screen {
     protected final Screen _parent;
     protected final List<Drawable> drawables = Lists.newArrayList();
     protected IModularMapClient _modularMapClient = (IModularMapClient) MinecraftClient.getInstance();
@@ -42,12 +42,12 @@ public abstract class AbstractScreen extends Screen {
             TEXT_WIDTH = 120,
             TEXT_HEIGHT = 24;
 
-    public AbstractScreen(String title, Screen parent) {
+    public AScreen(String title, Screen parent) {
         super(Text.literal(title));
         _parent = parent;
     }
 
-    public AbstractScreen(String title) {
+    public AScreen(String title) {
         this(title, null);
     }
 

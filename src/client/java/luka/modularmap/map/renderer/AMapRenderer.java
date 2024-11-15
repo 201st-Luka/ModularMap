@@ -30,11 +30,11 @@ import net.minecraft.util.math.RotationAxis;
 import org.jetbrains.annotations.NotNull;
 import org.joml.*;
 
-public abstract class AbstractMapRenderer {
+public abstract class AMapRenderer {
     protected static final int GRID_COLOR = 0x40000000;
     protected final MapController _mapController;
 
-    public AbstractMapRenderer(MapController map) {
+    public AMapRenderer(MapController map) {
         _mapController = map;
     }
 
