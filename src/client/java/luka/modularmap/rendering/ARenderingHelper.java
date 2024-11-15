@@ -40,21 +40,21 @@ import java.util.function.Consumer;
  * <p>
  * Do not create 2 instances of this class or its subclasses at the same time. Unexpected behavior may occur.
  */
-public abstract class AbstractRenderingHelper {
+public abstract class ARenderingHelper {
     protected final Tessellator _tessellator;
     protected final DrawContext _drawContext;
     protected final MatrixStack _matrices;
     protected final BufferBuilder _bufferBuilder;
     protected final MatrixStack.Entry _matrixStackPeek;
 
-    public AbstractRenderingHelper(@NotNull DrawContext drawContext,
-                                   Vector3d translation,
-                                   Vector3f scale,
-                                   Quaternionf rotation,
-                                   @NotNull VertexFormat.DrawMode drawMode,
-                                   @NotNull VertexFormat vertexFormat,
-                                   @NotNull Supplier<ShaderProgram> shaderProgram,
-                                   @NotNull Vector4f shaderColor) {
+    public ARenderingHelper(@NotNull DrawContext drawContext,
+                            Vector3d translation,
+                            Vector3f scale,
+                            Quaternionf rotation,
+                            @NotNull VertexFormat.DrawMode drawMode,
+                            @NotNull VertexFormat vertexFormat,
+                            @NotNull Supplier<ShaderProgram> shaderProgram,
+                            @NotNull Vector4f shaderColor) {
         _drawContext = drawContext;
 
         _matrices = _drawContext.getMatrices();

@@ -22,7 +22,7 @@ import luka.modularmap.ModularMapClient;
 import luka.modularmap.config.ConfigManager;
 import luka.modularmap.event.KeyInputHandler;
 import luka.modularmap.map.MapController;
-import luka.modularmap.map.renderer.AbstractMapRenderer;
+import luka.modularmap.map.renderer.AMapRenderer;
 import luka.modularmap.map.renderer.SurfaceRenderer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -40,9 +40,9 @@ import org.joml.Vector2d;
 import org.joml.Vector2i;
 
 @Environment(EnvType.CLIENT)
-public class MapScreen extends AbstractScreen {
+public class MapScreen extends AScreen {
     private final MapController _mapController;
-    private final AbstractMapRenderer _mapRenderer;
+    private final AMapRenderer _mapRenderer;
     private final ClientPlayerEntity _player;
     private int _zoom = 0;
     private double _scale = 1 / Math.pow(2, (double) _zoom / 4);

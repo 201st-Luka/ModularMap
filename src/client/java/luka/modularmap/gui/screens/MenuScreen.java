@@ -24,7 +24,7 @@ import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.screen.Screen;
 import org.jetbrains.annotations.NotNull;
 
-public class MenuScreen extends AbstractScreen {
+public class MenuScreen extends AScreen {
     public MenuScreen(String title, Screen parent) {
         super(title, parent);
     }

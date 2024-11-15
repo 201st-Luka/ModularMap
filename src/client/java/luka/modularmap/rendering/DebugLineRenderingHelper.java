@@ -28,7 +28,7 @@ import org.joml.Vector3d;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-public class DebugLineRenderingHelper extends AbstractRenderingHelper {
+public class DebugLineRenderingHelper extends ARenderingHelper {
 
     public DebugLineRenderingHelper(@NotNull DrawContext drawContext,
                                     @NotNull Vector3d translation,

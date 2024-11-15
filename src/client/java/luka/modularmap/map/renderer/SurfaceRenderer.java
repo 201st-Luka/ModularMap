@@ -32,7 +32,7 @@ import org.joml.*;
 
 import java.util.Vector;
 
-public class SurfaceRenderer extends AbstractMapRenderer {
+public class SurfaceRenderer extends AMapRenderer {
     public SurfaceRenderer(MapController map) {
         super(map);
     }

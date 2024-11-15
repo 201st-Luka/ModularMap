@@ -29,7 +29,7 @@ import org.joml.Vector3d;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-public class TriangleFanRenderingHelper extends AbstractRenderingHelper {
+public class TriangleFanRenderingHelper extends ARenderingHelper {
     private boolean _firstTriangle = false;
 
     public TriangleFanRenderingHelper(@NotNull DrawContext drawContext,

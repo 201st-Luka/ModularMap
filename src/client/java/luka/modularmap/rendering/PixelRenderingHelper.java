@@ -28,7 +28,7 @@ import org.joml.Vector3d;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-public class PixelRenderingHelper extends AbstractRenderingHelper {
+public class PixelRenderingHelper extends ARenderingHelper {
 
 
     public PixelRenderingHelper(DrawContext drawContext,
