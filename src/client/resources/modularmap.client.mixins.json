@@ -3,7 +3,7 @@
   "package": "luka.modularmap.mixin.client",
   "compatibilityLevel": "JAVA_21",
   "client": [
-    "AbstractModularMapClientMixin"
+    "AModularMapClientMixin"
   ],
   "injectors": {
     "defaultRequire": 1
